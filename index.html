@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AquaGuard AI — Adaptive Digital Twin for Aquaculture</title>
+    <!-- Google Fonts: Rajdhani for HUD headings & Inter for telemetry -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- 16:9 Letterbox Container -->
+    <div id="presentation-container">
+      <!-- 3D WebGL Canvas Layer -->
+      <canvas id="webgl-canvas"></canvas>
+
+      <!-- CSS2D Floating Labels Layer -->
+      <div id="css2d-container"></div>
+
+      <!-- HUD Overlay -->
+      <div id="hud-overlay">
+        <!-- Top Header: Brand & Status -->
+        <header id="hud-header">
+          <div class="brand-badge">
+            <span class="brand-pulse"></span>
+            <span class="brand-title">AQUAGUARD AI</span>
+            <span class="brand-sub">DIGITAL TWIN v2.4</span>
+          </div>
+
+          <!-- Risk Stars (1 to 5 stars) -->
+          <div id="risk-stars-container">
+            <span class="risk-label">FARM RISK LEVEL</span>
+            <div id="stars-row">
+              <span class="star" data-index="1">★</span>
+              <span class="star" data-index="2">★</span>
+              <span class="star" data-index="3">★</span>
+              <span class="star" data-index="4">★</span>
+              <span class="star" data-index="5">★</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Minimap (Top-Left) -->
+        <div id="minimap-panel">
+          <div class="minimap-header">
+            <span>FARM RADAR</span>
+            <span class="north-indicator">▲ N</span>
+          </div>
+          <div id="minimap-radar">
+            <div class="radar-sweep"></div>
+            <!-- 4 Pond Dots -->
+            <div class="pond-dot" id="dot-1" title="Pond 1: Tilapia">
+              <span class="dot-label">P1</span>
+            </div>
+            <div class="pond-dot" id="dot-2" title="Pond 2: Rohu">
+              <span class="dot-label">P2</span>
+            </div>
+            <div class="pond-dot" id="dot-3" title="Pond 3: Hero">
+              <span class="dot-label">P3</span>
+            </div>
+            <div class="pond-dot" id="dot-4" title="Pond 4: Shrimp">
+              <span class="dot-label">P4</span>
+            </div>
+            <div class="radar-center"></div>
+          </div>
+          <div class="minimap-status">
+            <span id="minimap-active-ponds">4 / 17 PONDS ONLINE</span>
+          </div>
+        </div>
+
+        <!-- Compact Top-Centre Alert Bar -->
+        <div id="critical-alert-banner">
+          <div class="banner-compact">
+            <span class="banner-pond-tag">POND 3 ALERT</span>
+            <span class="banner-cause" id="banner-cause-text">Dissolved oxygen depleted below safe threshold (4.0 mg/L)</span>
+            <span class="banner-countdown" id="banner-countdown-text">Est. 42m to critical</span>
+          </div>
+        </div>
+
+        <!-- Countdown Ring Panel (Chapter 4 - Predict) -->
+        <div id="predict-countdown-panel">
+          <div class="countdown-widget">
+            <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
+              <circle class="ring-bg" cx="65" cy="65" r="54" />
+              <circle class="ring-progress" id="countdown-circle" cx="65" cy="65" r="54" />
+            </svg>
+            <div class="ring-content">
+              <span class="ring-title">TIME TO CRITICAL</span>
+              <span class="ring-time" id="countdown-digits">42m</span>
+              <span class="ring-species">TILAPIA LIMIT: 2.8 mg/L</span>
+            </div>
+          </div>
+          <div class="predict-forecast-card">
+            <div class="forecast-row">
+              <span>Current DO:</span>
+              <strong id="predict-cur-do">2.6 mg/L</strong>
+            </div>
+            <div class="forecast-row">
+              <span>Depletion Rate:</span>
+              <strong class="text-danger">-0.42 mg/L/hr</strong>
+            </div>
+            <div class="forecast-row">
+              <span>Confidence:</span>
+              <strong class="text-purple">98.4% (Neural Twin)</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Underwater Explain Panel (Chapter 3 - Explain) -->
+        <div id="underwater-explain-panel">
+          <div class="explain-header">
+            <span class="explain-chip">ROOT CAUSE ANALYSIS</span>
+            <h3>POND 3 HYPOXIA DIAGNOSTICS</h3>
+          </div>
+          <div class="factors-list">
+            <div class="factor-item">
+              <div class="factor-info">
+                <span>Dissolved Oxygen Trajectory</span>
+                <span class="factor-val text-danger">Falling -0.4 mg/L/hr</span>
+              </div>
+              <div class="factor-bar-bg">
+                <div class="factor-bar-fill fill-danger" style="width: 88%"></div>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-info">
+                <span>Water Temperature Spike</span>
+                <span class="factor-val text-warning">+1.8 °C above baseline</span>
+              </div>
+              <div class="factor-bar-bg">
+                <div class="factor-bar-fill fill-warning" style="width: 72%"></div>
+              </div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-info">
+                <span>Low pH Acid Drift</span>
+                <span class="factor-val text-warning">6.5 pH (Alkalinity drop)</span>
+              </div>
+              <div class="factor-bar-bg">
+                <div class="factor-bar-fill fill-warning" style="width: 60%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="explain-footer">
+            <span class="fish-behavior-pill">OBSERVED BEHAVIOR: SURFACE CLUSTERING & GASPING</span>
+          </div>
+        </div>
+
+
+        <!-- Simulation Split Comparison (Chapter 6 - Simulate & Recommend) -->
+        <div id="simulation-split-panel">
+          <div class="sim-header">
+            <h3>TWIN DIGITAL TWIN PROJECTIONS</h3>
+            <span class="sim-badge">BAYESIAN COUNTERFACTUAL ENGINE</span>
+          </div>
+          <div class="sim-cards-row">
+            <!-- Scenario A: Do Nothing -->
+            <div class="sim-card card-negative">
+              <div class="sim-card-tag">BRANCH A: DO NOTHING</div>
+              <div class="sim-stat">
+                <span class="sim-val text-danger">1.1 mg/L</span>
+                <span class="sim-desc">Projected DO at +60m</span>
+              </div>
+              <div class="sim-result text-danger">
+                ⚠ 85% CATASTROPHIC FISH MORTALITY
+              </div>
+            </div>
+            <!-- Scenario B: Twin Protocol -->
+            <div class="sim-card card-positive">
+              <div class="sim-card-tag text-safe">BRANCH B: TWIN PROTOCOL</div>
+              <div class="sim-stat">
+                <span class="sim-val text-safe">5.8 mg/L</span>
+                <span class="sim-desc">Projected DO at +60m</span>
+              </div>
+              <div class="sim-result text-safe">
+                ✓ FULL RECOVERY (0% LOSS)
+              </div>
+            </div>
+          </div>
+          <!-- Recommended Actions Checklist -->
+          <div class="action-checklist">
+            <span class="checklist-title">RECOMMENDED ACTIONS & AUTONOMOUS DISPATCH:</span>
+            <div class="check-item checked" id="check-1">
+              <span class="check-box">✔</span>
+              <span>1. Activate Paddle-Wheel Aerator Unit A-03</span>
+            </div>
+            <div class="check-item checked" id="check-2">
+              <span class="check-box">✔</span>
+              <span>2. Initiate 15% Fresh Water Inflow</span>
+            </div>
+            <div class="check-item" id="check-3">
+              <span class="check-box" id="check-box-3">○</span>
+              <span>3. Telemetry Feedback Verification at +15m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- End Card (Chapter 7 - Learn) -->
+        <div id="end-card-panel">
+          <div class="end-card-box">
+            <div class="end-badge">AQUAGUARD AI PLATFORM</div>
+            <h2>Adaptive Digital Twin for Aquaculture</h2>
+            <p class="end-subtitle">
+              Closing the loop between telemetry sensors, edge inference, and farmer livelihood.
+            </p>
+            <div class="end-stages-loop">
+              <span class="stage-tag">Observe</span>
+              <span class="stage-sep">•</span>
+              <span class="stage-tag">Detect</span>
+              <span class="stage-sep">•</span>
+              <span class="stage-tag">Explain</span>
+              <span class="stage-sep">•</span>
+              <span class="stage-tag">Predict</span>
+              <span class="stage-sep">•</span>
+              <span class="stage-tag">Simulate</span>
+              <span class="stage-sep">•</span>
+              <span class="stage-tag">Recommend</span>
+              <span class="stage-sep">•</span>
+              <span class="stage-tag active">Learn</span>
+            </div>
+            <div class="end-team-tag">
+              Developed for Hackathon by <strong>Hawkins Crew</strong>
+            </div>
+            <button id="btn-replay">↻ REPLAY DEMO</button>
+          </div>
+        </div>
+
+        <!-- Intro Title Card (Chapter 0) -->
+        <div id="intro-card-panel">
+          <div class="intro-box">
+            <span class="intro-chip">NEXT-GEN AQUACULTURE INTELLIGENCE</span>
+            <h1>AquaGuard AI</h1>
+            <p class="intro-tagline">
+              Adaptive Digital Twin for Aquaculture Farms
+            </p>
+            <div class="intro-stats-row">
+              <div class="intro-stat-item">
+                <strong>17</strong>
+                <span>Ponds Monitored</span>
+              </div>
+              <div class="intro-stat-item">
+                <strong>73,000+</strong>
+                <span>Continuous Observations</span>
+              </div>
+              <div class="intro-stat-item">
+                <strong>42 min</strong>
+                <span>Early Warning Horizon</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mission Objective Bar (Bottom-Centre) -->
+        <div id="mission-bar-container">
+          <div class="mission-bar">
+            <div class="mission-step-tag" id="mission-step-tag">STEP 1 OF 7: OVERVIEW</div>
+            <div class="mission-subtext" id="mission-narrative">AquaGuard AI Digital Twin: establishing real-time telemetry link across 4 monitored pond ecosystems.</div>
+          </div>
+        </div>
+
+        <!-- Bottom Controls & Timeline Bar -->
+        <footer id="hud-footer">
+          <div class="controls-left">
+            <button id="btn-play-pause" title="Play / Pause (Space)">❚❚</button>
+            <span id="time-display">00:00 / 01:15</span>
+          </div>
+
+          <!-- Timeline Chapter Track -->
+          <div id="timeline-track-container">
+            <div id="timeline-progress-bar"></div>
+            <div class="chapter-ticks" id="chapter-ticks-row">
+              <!-- Dynamically populated 8 chapter ticks -->
+            </div>
+          </div>
+
+          <div class="controls-right">
+            <button id="btn-toggle-hud" title="Toggle HUD (H)">HUD [H]</button>
+            <button id="btn-fullscreen" title="Fullscreen">⛶</button>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Main JavaScript App -->
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

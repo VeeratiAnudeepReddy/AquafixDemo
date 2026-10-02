@@ -1,0 +1,632 @@
+/* AquaGuard AI — Realistic Smartphone Dock & Multi-Scene UI */
+
+.smartphone-dock {
+  position: absolute;
+  top: 56px;
+  right: 24px;
+  width: 280px;
+  height: 520px;
+  z-index: 28;
+  pointer-events: auto;
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease-out;
+}
+
+.smartphone-dock.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Physical Phone Chassis */
+.smartphone-case {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #090E17;
+  border: 4px solid #1E293B;
+  border-radius: 36px;
+  padding: 10px 8px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), inset 0 0 4px rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.smartphone-speaker {
+  width: 48px;
+  height: 4px;
+  background: #334155;
+  border-radius: 2px;
+  margin: 0 auto 4px auto;
+}
+
+.smartphone-camera-hole {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #000;
+  border: 1px solid #1E293B;
+  z-index: 10;
+}
+
+.smartphone-screen {
+  position: relative;
+  flex: 1;
+  background: #0F172A;
+  border-radius: 26px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phone Status Bar */
+.phone-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 14px 2px 14px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94A3B8;
+  z-index: 5;
+}
+
+.phone-status-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+}
+
+/* Phone Scenes Base */
+.phone-scene {
+  flex: 1;
+  display: none !important;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.phone-scene.active {
+  display: flex !important;
+}
+
+/* ----------------------------------------------------
+   Scene 1: AquaGuard Mobile App
+   ---------------------------------------------------- */
+.app-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #1E293B;
+}
+
+.app-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-brand-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.app-farm-title {
+  font-size: 9px;
+  color: #64748B;
+}
+
+.lang-toggle-chip {
+  background: #1E293B;
+  border: 1px solid #334155;
+  color: #38BDF8;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.app-scroll-content {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phone-hero-card {
+  background: #1E293B;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.hero-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.p-card-tag {
+  display: block;
+  font-size: 8px;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.p-card-title {
+  font-size: 12px;
+  color: #FFF;
+}
+
+.p-card-status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.phone-gauges-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.gauge-item {
+  background: #0F172A;
+  border-radius: 4px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.g-label {
+  font-size: 8px;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.g-val {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 1px 0;
+}
+
+.g-bar-bg {
+  width: 100%;
+  height: 3px;
+  background: #1E293B;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.g-bar-fill {
+  height: 100%;
+}
+
+.g-range {
+  font-size: 7px;
+  color: #64748B;
+}
+
+.phone-forecast-box {
+  background: #0F172A;
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.forecast-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 700;
+  color: #94A3B8;
+  margin-bottom: 4px;
+}
+
+.phone-chart-svg {
+  width: 100%;
+  height: 48px;
+}
+
+.phone-other-ponds {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.other-pond-tile {
+  background: #1E293B;
+  border-radius: 4px;
+  padding: 5px 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.other-pond-tile span {
+  color: #94A3B8;
+}
+
+.other-pond-tile strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.app-tab-bar {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #1E293B;
+  padding: 6px 0;
+  background: #090E17;
+}
+
+.tab-item {
+  font-size: 9px;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+}
+
+.tab-item.active {
+  color: #38BDF8;
+}
+
+/* ----------------------------------------------------
+   Scene 2: WhatsApp-Style Alert Thread
+   ---------------------------------------------------- */
+.scene-chat {
+  background: #0B141A;
+}
+
+.chat-header {
+  background: #128C7E;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-avatar {
+  width: 26px;
+  height: 26px;
+  background: #075E54;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFF;
+}
+
+.chat-info strong {
+  display: block;
+  font-size: 11px;
+  color: #FFF;
+}
+
+.chat-info span {
+  font-size: 8px;
+  color: #D1FAE5;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-bubble {
+  max-width: 88%;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.bubble-incoming {
+  align-self: flex-start;
+  background: #202C33;
+  color: #E9EDEF;
+  border-top-left-radius: 0;
+}
+
+.bubble-outgoing {
+  align-self: flex-end;
+  background: #005C4B;
+  color: #E9EDEF;
+  border-top-right-radius: 0;
+}
+
+.bubble-telugu {
+  align-self: flex-start;
+  background: #202C33;
+  color: #FBBF24;
+  border-left: 2px solid #F59E0B;
+}
+
+.bubble-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #FF7043;
+  margin-bottom: 2px;
+}
+
+.bubble-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  color: #8696A0;
+  margin-top: 3px;
+}
+
+.double-ticks {
+  font-size: 9px;
+  color: #8696A0;
+}
+
+.double-ticks.blue {
+  color: #53BDEB;
+}
+
+.chat-typing-row {
+  padding: 3px 8px;
+  font-size: 9px;
+  color: #8696A0;
+  font-style: italic;
+}
+
+.chat-quick-replies {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-top: 1px solid #1E293B;
+  background: #111B21;
+}
+
+.btn-quick-reply {
+  flex: 1;
+  background: #202C33;
+  border: 1px solid #374151;
+  color: #22D3EE;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 4px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.btn-quick-reply:hover {
+  background: #2A3942;
+}
+
+/* ----------------------------------------------------
+   Scene 3: Automated Voice Call
+   ---------------------------------------------------- */
+.scene-call {
+  background: #0A0F1D;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+  text-align: center;
+}
+
+.call-incoming {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.ringing-rings-box {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.call-avatar-big {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #4C1D95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFF;
+  z-index: 2;
+}
+
+.ring-pulse-ring {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #8B5CF6;
+  animation: ringPulse 2s infinite ease-out;
+}
+
+.ring-pulse-ring.r2 {
+  animation-delay: 0.8s;
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.call-incoming h3 {
+  font-size: 13px;
+  color: #FFF;
+}
+
+.call-action-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.btn-call-decline {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #EF4444;
+  border: none;
+  color: #FFF;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn-call-answer {
+  background: #10B981;
+  border: none;
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 16px;
+  height: 44px;
+  border-radius: 22px;
+  cursor: pointer;
+}
+
+/* Connected In-Call View */
+.call-connected {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.connected-header h3 {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.call-timer {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.audio-waveform-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  margin: 4px 0;
+}
+
+.wave-bar {
+  width: 3px;
+  background: #A855F7;
+  border-radius: 2px;
+  animation: waveBar 1.2s infinite ease-in-out alternate;
+}
+
+.wave-bar.w1 { height: 8px; animation-delay: 0.1s; }
+.wave-bar.w2 { height: 16px; animation-delay: 0.3s; }
+.wave-bar.w3 { height: 22px; animation-delay: 0.5s; }
+.wave-bar.w4 { height: 14px; animation-delay: 0.2s; }
+.wave-bar.w5 { height: 20px; animation-delay: 0.4s; }
+.wave-bar.w6 { height: 12px; animation-delay: 0.6s; }
+.wave-bar.w7 { height: 6px; animation-delay: 0.15s; }
+
+@keyframes waveBar {
+  0% { transform: scaleY(0.4); opacity: 0.5; }
+  100% { transform: scaleY(1.2); opacity: 1; }
+}
+
+.call-captions-box {
+  background: #111827;
+  border: 1px solid #1F2937;
+  border-radius: 6px;
+  padding: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.caption-telugu {
+  font-size: 9px;
+  color: #FBBF24;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  border-bottom: 1px dashed #374151;
+  padding-bottom: 4px;
+}
+
+.caption-english {
+  font-size: 9px;
+  color: #D1D5DB;
+  line-height: 1.35;
+}
+
+.call-keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.keypad-key {
+  background: #1F2937;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFF;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 150ms ease;
+}
+
+.keypad-key span {
+  font-size: 7px;
+  color: #9CA3AF;
+}
+
+.keypad-key.active-key {
+  border: 1px solid #A855F7;
+  background: #2E1065;
+}
+
+.keypad-key.pressed {
+  background: #10B981 !important;
+  color: #000 !important;
+  transform: scale(0.95);
+}
+
+.keypad-status-msg {
+  font-size: 9px;
+  color: #94A3B8;
+  margin-top: 2px;
+}
