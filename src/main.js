@@ -148,6 +148,7 @@ class AquaGuardApp {
       farmer: this.farmer,
       sensorSim: this.sensorSim,
       underwaterEffects: this.underwater,
+      pondWater: this.pondWater,
       phoneApp: this.phoneApp
     });
 
@@ -183,6 +184,40 @@ class AquaGuardApp {
         }, 150);
       }
     }
+
+    if (urlParams.has('debug')) {
+      setTimeout(() => {
+        if (this.fishFlocks && this.fishFlocks.toggleDebugWireframes) {
+          this.fishFlocks.toggleDebugWireframes();
+        }
+      }, 200);
+    }
+
+    if (urlParams.has('focus')) {
+      const f = urlParams.get('focus');
+      setTimeout(() => {
+        if (this.timeline && this.timeline.masterTimeline) {
+          this.timeline.masterTimeline.pause();
+        }
+        this.hudManager.setChapterOverlay(1, this.sensorSim);
+        if (f === 'rohu') {
+          // Rohu in Pond 2 [x: 17, z: -22] - front lit
+          this.camera.position.set(17, -1.5, -30);
+          this.camera.lookAt(17, -1.9, -22);
+          if (this.timeline.cameraTarget) this.timeline.cameraTarget.set(17, -1.9, -22);
+        } else if (f === 'shrimp') {
+          // Shrimp in Pond 4 [x: 17, z: 22] - floor perspective front lit
+          this.camera.position.set(17, -2.2, 30);
+          this.camera.lookAt(17, -2.85, 22);
+          if (this.timeline.cameraTarget) this.timeline.cameraTarget.set(17, -2.85, 22);
+        } else if (f === 'tilapia') {
+          // Tilapia in Pond 3 [x: -17, z: 22]
+          this.camera.position.set(-17, -1.5, 30);
+          this.camera.lookAt(-17, -1.9, 22);
+          if (this.timeline.cameraTarget) this.timeline.cameraTarget.set(-17, -1.9, 22);
+        }
+      }, 250);
+    }
   }
 
   initInteractions() {
@@ -201,6 +236,10 @@ class AquaGuardApp {
       } else if (e.key === 'm' || e.key === 'M') {
         const isAudioOn = audioService.toggleMute();
         console.log(`[AquaGuard Audio]: ${isAudioOn ? 'Enabled' : 'Muted'}`);
+      } else if (e.key === 'd' || e.key === 'D') {
+        if (this.fishFlocks && this.fishFlocks.toggleDebugWireframes) {
+          this.fishFlocks.toggleDebugWireframes();
+        }
       } else if (e.key === 'f' || e.key === 'F') {
         if (!document.fullscreenElement) {
           if (this.container.requestFullscreen) this.container.requestFullscreen();

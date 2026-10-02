@@ -23,6 +23,16 @@ export const CONFIG = {
     textMuted: '#94A3B8'
   },
 
+  // Shared Water Colour Model (consistent across aerial & underwater)
+  water: {
+    shallow: '#3FB8B0',       // Clear vibrant teal in shallows
+    mid: '#1F8F9A',           // Balanced teal-green
+    deep: '#0E5A6B',          // Clear deep teal-green (never murky brown/black)
+    silt: '#7A6A4F',          // Warm earthy pond silt floor
+    underwaterFog: '#1B7F8C', // Light, bright underwater fog
+    transparency: 0.80        // 0.75 - 0.85 transparency
+  },
+
   // Dimensions & Farm Layout
   farm: {
     pondWidth: 26,
@@ -30,13 +40,11 @@ export const CONFIG = {
     pondDepth: 3.5,
     bundWidth: 4.5,
     waterLevelY: -0.4,
+    floorY: -3.5,
     gridSpacingX: 34,
     gridSpacingZ: 44,
-    // 2x2 Grid Centers:
-    // Pond 1: Top-Left (-17, -22)
-    // Pond 2: Top-Right ( 17, -22)
-    // Pond 3: Bottom-Left (-17,  22) -> HERO POND
-    // Pond 4: Bottom-Right ( 17,  22)
+    // 2x2 Grid Centers with explicit Hard Containment Swim Volumes:
+    // Inset 0.6 m from walls; Y between floorY + 0.4 (-3.10) and surfaceY - 0.35 (-0.75)
     ponds: [
       {
         id: 1,
@@ -45,7 +53,12 @@ export const CONFIG = {
         color: '#7FB7E5',
         x: -17,
         z: -22,
-        sensors: { do: 6.8, ph: 7.4, temp: 28.1, nh3: 0.02, risk: 'LOW' }
+        sensors: { do: 6.8, ph: 7.4, temp: 28.1, nh3: 0.02, risk: 'LOW' },
+        swimVolume: {
+          minX: -17 - 12.4, maxX: -17 + 12.4,
+          minY: -3.10,      maxY: -0.75,
+          minZ: -22 - 17.4, maxZ: -22 + 17.4
+        }
       },
       {
         id: 2,
@@ -54,7 +67,12 @@ export const CONFIG = {
         color: '#D4AF37',
         x: 17,
         z: -22,
-        sensors: { do: 5.1, ph: 6.9, temp: 29.4, nh3: 0.15, risk: 'MEDIUM' }
+        sensors: { do: 5.1, ph: 6.9, temp: 29.4, nh3: 0.15, risk: 'MEDIUM' },
+        swimVolume: {
+          minX: 17 - 12.4,  maxX: 17 + 12.4,
+          minY: -3.10,      maxY: -0.75,
+          minZ: -22 - 17.4, maxZ: -22 + 17.4
+        }
       },
       {
         id: 3,
@@ -65,7 +83,12 @@ export const CONFIG = {
         z: 22,
         hero: true,
         // Starting hero readings:
-        sensors: { do: 4.0, ph: 6.7, temp: 30.2, nh3: 0.02, risk: 'HIGH' }
+        sensors: { do: 4.0, ph: 6.7, temp: 30.2, nh3: 0.02, risk: 'HIGH' },
+        swimVolume: {
+          minX: -17 - 12.4, maxX: -17 + 12.4,
+          minY: -3.10,      maxY: -0.75,
+          minZ: 22 - 17.4,  maxZ: 22 + 17.4
+        }
       },
       {
         id: 4,
@@ -74,24 +97,30 @@ export const CONFIG = {
         color: '#FF8A80',
         x: 17,
         z: 22,
-        sensors: { do: 6.9, ph: 7.6, temp: 27.8, nh3: 0.03, risk: 'LOW' }
+        sensors: { do: 6.9, ph: 7.6, temp: 27.8, nh3: 0.03, risk: 'LOW' },
+        swimVolume: {
+          minX: 17 - 12.4,  maxX: 17 + 12.4,
+          minY: -3.10,      maxY: -0.75, // Floor + 0.4m to Surface - 0.35m per Step 1
+          minZ: 22 - 17.4,  maxZ: 22 + 17.4
+        }
       }
     ]
   },
 
-  // Fish Configuration
+  // Fish Configuration & Steering Dynamics
   fish: {
     counts: {
-      pond1: 55,
-      pond2: 45,
-      pond3: 65, // Hero pond
-      pond4: 70  // Shrimp
+      pond1: 52,
+      pond2: 44,
+      pond3: 64, // Hero pond
+      pond4: 65  // Shrimp
     },
-    speed: {
-      normal: 3.2,
-      distressed: 5.5,
-      lethargic: 1.2
-    }
+    speeds: {
+      tilapia: { cruising: 1.1, max: 2.2, lowDO: 0.65 },
+      rohu: { cruising: 0.9, max: 1.8, lowDO: 0.55 },
+      shrimp: { cruising: 0.35, burst: 1.6, floorY: -2.95 }
+    },
+    gaspingDepth: -0.65 // surfaceY (-0.40) - 0.25m = -0.65m target center
   },
 
   // Species Critical Thresholds (Dissolved Oxygen mg/L)

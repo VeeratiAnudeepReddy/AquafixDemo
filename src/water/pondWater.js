@@ -1,6 +1,17 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 
+/**
+ * Pond Water Surface Simulation
+ * Features:
+ * - Shared water color model: shallow #3FB8B0, mid #1F8F9A, deep #0E5A6B
+ * - Depth-based multi-tier color blending
+ * - Dual-scale animated micro-normals for wave glitter
+ * - Fresnel sky reflection with transparency 0.78 - 0.90 for readable underwater visibility
+ * - Subtle pond risk tint shift (max 15% blend towards natural greenish murk)
+ * - Aerator radial wave ripples and fish surfacing ripples
+ */
+
 export function createPondWater(scene) {
   const waterGroup = new THREE.Group();
   waterGroup.name = 'PondWater';
@@ -8,7 +19,6 @@ export function createPondWater(scene) {
   const pw = CONFIG.farm.pondWidth - 0.2;
   const pl = CONFIG.farm.pondLength - 0.2;
 
-  // Layered Water Surface Shader with dual-scale normal perturbation, sun glitter, aerator ripples, and shoreline foam
   const waterVertexShader = `
     uniform float uTime;
     uniform vec3 uAeratorPos[4];
@@ -24,10 +34,10 @@ export function createPondWater(scene) {
       vUv = uv;
       vec3 pos = position;
 
-      // Base undulating wave
-      float wave1 = sin(pos.x * 0.45 + uTime * 1.7) * 0.05;
-      float wave2 = cos(pos.y * 0.38 + uTime * 1.3) * 0.045;
-      float wave3 = sin((pos.x + pos.y) * 0.65 + uTime * 2.1) * 0.025;
+      // Base gentle water undulation
+      float wave1 = sin(pos.x * 0.40 + uTime * 1.5) * 0.04;
+      float wave2 = cos(pos.y * 0.35 + uTime * 1.2) * 0.035;
+      float wave3 = sin((pos.x + pos.y) * 0.60 + uTime * 1.9) * 0.02;
       float totalDisp = wave1 + wave2 + wave3;
 
       vec4 worldPosition = modelMatrix * vec4(pos.x, pos.y, pos.z, 1.0);
@@ -36,18 +46,18 @@ export function createPondWater(scene) {
       for (int i = 0; i < 4; i++) {
         if (uAeratorActive[i] > 0.05) {
           float d = length(worldPosition.xz - uAeratorPos[i].xz);
-          if (d < 12.0) {
-            float ripple = sin(d * 4.5 - uTime * 9.0) * exp(-d * 0.35) * 0.08 * uAeratorActive[i];
+          if (d < 14.0) {
+            float ripple = sin(d * 4.2 - uTime * 8.5) * exp(-d * 0.32) * 0.075 * uAeratorActive[i];
             totalDisp += ripple;
           }
         }
       }
 
-      // Fish surfacing ripples
+      // Fish surfacing ripples (near Hero pond buoy during low DO)
       if (uFishRippleActive > 0.05) {
         float fd = length(worldPosition.xz - uFishRipplePos.xz);
-        if (fd < 6.0) {
-          totalDisp += sin(fd * 6.0 - uTime * 7.0) * exp(-fd * 0.6) * 0.04 * uFishRippleActive;
+        if (fd < 7.0) {
+          totalDisp += sin(fd * 5.5 - uTime * 6.5) * exp(-fd * 0.55) * 0.035 * uFishRippleActive;
         }
       }
 
@@ -55,9 +65,9 @@ export function createPondWater(scene) {
       worldPosition = modelMatrix * vec4(pos, 1.0);
       vWorldPosition = worldPosition.xyz;
 
-      // Calculate surface normal derivative
-      float dX = cos(pos.x * 0.45 + uTime * 1.7) * 0.022 + cos((pos.x + pos.y) * 0.65 + uTime * 2.1) * 0.016;
-      float dY = -sin(pos.y * 0.38 + uTime * 1.3) * 0.017 + cos((pos.x + pos.y) * 0.65 + uTime * 2.1) * 0.016;
+      // Calculated surface normal derivatives
+      float dX = cos(pos.x * 0.40 + uTime * 1.5) * 0.016 + cos((pos.x + pos.y) * 0.60 + uTime * 1.9) * 0.012;
+      float dY = -sin(pos.y * 0.35 + uTime * 1.2) * 0.012 + cos((pos.x + pos.y) * 0.60 + uTime * 1.9) * 0.012;
       vNormal = normalize(vec3(-dX, 1.0, -dY));
 
       gl_Position = projectionMatrix * viewMatrix * worldPosition;
@@ -67,24 +77,30 @@ export function createPondWater(scene) {
   const waterFragmentShader = `
     uniform float uTime;
     uniform vec3 uColorShallow;
+    uniform vec3 uColorMid;
     uniform vec3 uColorDeep;
+    uniform vec3 uColorMurky;
+    uniform float uRiskLevel[4];
+    uniform int uPondIndex;
     uniform vec3 uColorFoam;
     uniform vec3 uSunDirection;
     uniform vec3 uSunColor;
     uniform vec3 uSkyColor;
     uniform vec3 uCameraPos;
+    uniform vec3 uAeratorPos[4];
+    uniform float uAeratorActive[4];
 
     varying vec2 vUv;
     varying vec3 vWorldPosition;
     varying vec3 vNormal;
 
-    // Dual-scale animated procedural micro-normals for wave glitter
+    // Dual-scale scrolling procedural normal perturbation
     vec3 getDualNormals(vec2 uv, float time, vec3 baseNormal) {
-      vec2 uv1 = uv * 14.0 + vec2(time * 0.06, time * 0.04);
-      vec2 uv2 = uv * 32.0 - vec2(time * 0.08, -time * 0.05);
+      vec2 uv1 = uv * 16.0 + vec2(time * 0.05, time * 0.03);
+      vec2 uv2 = uv * 36.0 - vec2(time * 0.07, -time * 0.04);
 
-      float n1 = sin(uv1.x + sin(uv1.y)) * 0.08;
-      float n2 = cos(uv2.x * 1.2 + cos(uv2.y * 1.1)) * 0.05;
+      float n1 = sin(uv1.x + sin(uv1.y)) * 0.07;
+      float n2 = cos(uv2.x * 1.2 + cos(uv2.y * 1.1)) * 0.045;
 
       vec3 perturbed = baseNormal + vec3(n1 + n2, 0.0, n1 - n2);
       return normalize(perturbed);
@@ -94,47 +110,70 @@ export function createPondWater(scene) {
       vec3 viewDir = normalize(uCameraPos - vWorldPosition);
       vec3 normal = getDualNormals(vUv, uTime, vNormal);
 
-      // Fresnel reflection factor
+      // Fresnel reflection factor: stronger at grazing angles, transparent when looking down
       float NdotV = max(dot(normal, viewDir), 0.0);
-      float fresnel = clamp(1.0 - NdotV, 0.0, 1.0);
-      fresnel = pow(fresnel, 3.0);
+      float fresnel = pow(1.0 - NdotV, 3.2);
 
-      // Sun Specular Highlight & Micro-Glitter
+      // Specular Sun Glitter Highlight
       vec3 halfDir = normalize(uSunDirection + viewDir);
       float NdotH = max(dot(normal, halfDir), 0.0);
-      float broadSpec = pow(NdotH, 28.0) * 0.8;
-      float sharpGlitter = pow(NdotH, 128.0) * 1.5;
+      float broadSpec = pow(NdotH, 24.0) * 0.55;
+      float sharpGlitter = pow(NdotH, 140.0) * 1.35;
       vec3 specular = uSunColor * (broadSpec + sharpGlitter);
 
-      // Depth-based color: lighter teal in shallows near edges, deep teal in center
+      // Depth-based color: shallow edges -> mid teal -> deep center
       float edgeDistX = min(vUv.x, 1.0 - vUv.x);
       float edgeDistY = min(vUv.y, 1.0 - vUv.y);
-      float depthFactor = clamp(min(edgeDistX, edgeDistY) * 3.5, 0.0, 1.0);
-      vec3 waterBody = mix(uColorShallow, uColorDeep, depthFactor);
+      float depthFactor = clamp(min(edgeDistX, edgeDistY) * 3.4, 0.0, 1.0);
 
-      // Sky reflection mixed with fresnel
-      vec3 waterReflect = mix(waterBody, uSkyColor, fresnel * 0.7);
+      vec3 waterBase = mix(uColorShallow, uColorMid, smoothstep(0.0, 0.45, depthFactor));
+      waterBase = mix(waterBase, uColorDeep, smoothstep(0.45, 1.0, depthFactor));
+
+      // Subtle pond status color hint: up to 15% blend toward natural greener murky tint
+      float risk = uRiskLevel[uPondIndex];
+      waterBase = mix(waterBase, uColorMurky, risk * 0.15);
+
+      // Sky reflection blend via fresnel
+      vec3 waterColor = mix(waterBase, uSkyColor, fresnel * 0.65);
 
       // Shoreline soft foam line with animated turbulence
-      float foamNoise = sin(vUv.x * 70.0 + uTime * 2.5) * 0.008 + cos(vUv.y * 60.0 + uTime * 1.8) * 0.008;
-      float foam = smoothstep(0.04 + foamNoise, 0.005, min(edgeDistX, edgeDistY));
+      float foamNoise = sin(vUv.x * 65.0 + uTime * 2.2) * 0.007 + cos(vUv.y * 55.0 + uTime * 1.6) * 0.007;
+      float edgeFoam = smoothstep(0.035 + foamNoise, 0.005, min(edgeDistX, edgeDistY));
 
-      // Compose final water color
-      vec3 finalColor = mix(waterReflect, uColorFoam, foam * 0.7);
+      // Aerator splash foam ring
+      float aeratorFoam = 0.0;
+      for (int i = 0; i < 4; i++) {
+        if (uAeratorActive[i] > 0.05) {
+          float d = length(vWorldPosition.xz - uAeratorPos[i].xz);
+          if (d < 3.2) {
+            float aNoise = sin(vUv.x * 80.0 + uTime * 4.0) * 0.15;
+            aeratorFoam += smoothstep(3.2, 0.4, d + aNoise) * 0.65 * uAeratorActive[i];
+          }
+        }
+      }
+
+      float totalFoam = clamp(edgeFoam * 0.65 + aeratorFoam, 0.0, 1.0);
+      vec3 finalColor = mix(waterColor, uColorFoam, totalFoam);
       finalColor += specular;
 
-      gl_FragColor = vec4(finalColor, 0.94);
+      // Transparency: 0.78 from top-down so silt floor and fish are readable, ramping to 0.92 at grazing
+      float alpha = mix(CONFIG.water.transparency, 0.92, fresnel);
+      gl_FragColor = vec4(finalColor, alpha);
     }
   `;
 
-  // Aerator positions for ripples
+  // Aerator positions for ripples and foam
   const aeratorPositions = CONFIG.farm.ponds.map((p) => new THREE.Vector3(p.x + 5, CONFIG.farm.waterLevelY, p.z));
 
   const waterUniforms = {
     uTime: { value: 0 },
-    uColorShallow: { value: new THREE.Color('#38C1BA') }, // Vibrant light teal shallows
-    uColorDeep: { value: new THREE.Color(CONFIG.palette.waterDeep) }, // Deep silt teal
+    uColorShallow: { value: new THREE.Color(CONFIG.water.shallow) }, // #3FB8B0
+    uColorMid: { value: new THREE.Color(CONFIG.water.mid) },         // #1F8F9A
+    uColorDeep: { value: new THREE.Color(CONFIG.water.deep) },       // #0E5A6B
+    uColorMurky: { value: new THREE.Color('#226E64') },              // Natural greenish phytoplankton murk
     uColorFoam: { value: new THREE.Color('#F0FDFA') },
+    uRiskLevel: { value: [0.0, 0.35, 0.75, 0.0] },                  // P1: Low, P2: Med, P3: High, P4: Low
+    uPondIndex: { value: 0 },
     uSunDirection: { value: new THREE.Vector3(45, 55, 35).normalize() },
     uSunColor: { value: new THREE.Color('#FFF5E4') },
     uSkyColor: { value: new THREE.Color(CONFIG.palette.skyPeach) },
@@ -145,35 +184,45 @@ export function createPondWater(scene) {
     uFishRippleActive: { value: 0.0 }
   };
 
-  const waterMaterial = new THREE.ShaderMaterial({
-    vertexShader: waterVertexShader,
-    fragmentShader: waterFragmentShader,
-    uniforms: waterUniforms,
-    transparent: true,
-    side: THREE.DoubleSide
-  });
-
   const waterPlanes = [];
 
-  CONFIG.farm.ponds.forEach((p) => {
+  CONFIG.farm.ponds.forEach((p, index) => {
     const geo = new THREE.PlaneGeometry(pw, pl, 56, 72);
     geo.rotateX(-Math.PI / 2);
 
-    const mesh = new THREE.Mesh(geo, waterMaterial);
+    // Clone uniforms for per-pond index binding
+    const pondUniforms = {
+      ...waterUniforms,
+      uPondIndex: { value: index }
+    };
+
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: waterVertexShader,
+      fragmentShader: waterFragmentShader,
+      uniforms: pondUniforms,
+      transparent: true,
+      side: THREE.DoubleSide,
+      defines: {
+        CONFIG_TRANSPARENCY: '0.80'
+      }
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(p.x, CONFIG.farm.waterLevelY, p.z);
     mesh.receiveShadow = true;
     waterGroup.add(mesh);
-    waterPlanes.push(mesh);
+    waterPlanes.push({ mesh, mat });
   });
 
   scene.add(waterGroup);
 
   return {
     group: waterGroup,
-    material: waterMaterial,
-    uniforms: waterUniforms,
     setAeratorActive: (pondIndex, active) => {
       waterUniforms.uAeratorActive.value[pondIndex] = active ? 1.0 : 0.0;
+    },
+    setRiskLevel: (pondIndex, riskVal) => {
+      waterUniforms.uRiskLevel.value[pondIndex] = riskVal;
     },
     setFishRippling: (active) => {
       waterUniforms.uFishRippleActive.value = active ? 1.0 : 0.0;

@@ -16,6 +16,7 @@ export class AnimationTimeline {
     farmer,
     sensorSim,
     underwaterEffects,
+    pondWater,
     phoneApp
   }) {
     this.camera = camera;
@@ -30,6 +31,7 @@ export class AnimationTimeline {
     this.farmer = farmer;
     this.sensorSim = sensorSim;
     this.underwaterEffects = underwaterEffects;
+    this.pondWater = pondWater;
     this.phoneApp = phoneApp;
 
     this.currentTime = 0;
@@ -132,15 +134,112 @@ export class AnimationTimeline {
 
     // ----------------------------------------------------
     // Chapter 3: EXPLAIN (24 - 34s) - Underwater Diagnostic Dive
+    // Smooth continuous aerial -> underwater -> aerial flow (3-4s transitions, no cuts)
     // ----------------------------------------------------
     tl.addLabel('ch-3', 24);
     tl.call(() => {
       this.currentChapterId = 3;
       this.hudManager.setChapterOverlay(3, this.sensorSim);
-      this.fishFlocks.setDistress(3, 1.05); // Gasping fish
+      this.fishFlocks.setDistress(3, 1.05); // Gasping fish rising near surface
     }, null, 24);
 
-    tl.add(tweenCamera(cConfig.underwater, 10, 'power2.inOut', -2.5), 24);
+    // Stage 1: Aerial descent toward water surface (24.0s - 25.6s, 1.6s)
+    tl.to(cam.position, {
+      x: -21.0,
+      y: 1.8,
+      z: 32.0,
+      duration: 1.6,
+      ease: 'power1.in'
+    }, 24.0);
+    tl.to(this.cameraTarget, {
+      x: -17.0,
+      y: -0.4,
+      z: 22.0,
+      duration: 1.6,
+      ease: 'power1.in',
+      onUpdate: () => cam.lookAt(this.cameraTarget)
+    }, 24.0);
+
+    // Surface Piercing Moment: trigger splash ripple and fade fog (25.6s)
+    tl.call(() => {
+      if (this.pondWater) this.pondWater.setFishRippling(true);
+      if (this.underwaterEffects) this.underwaterEffects.setUnderwaterVisibility(0.85);
+    }, null, 25.6);
+
+    // Stage 2: Passing through surface into underwater viewing position (25.6s - 27.4s, 1.8s)
+    tl.to(cam.position, {
+      x: -16.5,
+      y: -1.8,
+      z: 23.5,
+      duration: 1.8,
+      ease: 'power2.out'
+    }, 25.6);
+    tl.to(this.cameraTarget, {
+      x: -12.5,
+      y: -1.6,
+      z: 20.5,
+      duration: 1.8,
+      ease: 'power2.out',
+      onUpdate: () => cam.lookAt(this.cameraTarget)
+    }, 25.6);
+
+    // Stage 3: Steady underwater exploration (27.4s - 31.0s, 3.6s)
+    // Clear view of fish schooling, caustics, and illuminated ceiling (clearance > 1.7m above floor)
+    tl.to(cam.position, {
+      x: -14.8,
+      y: -1.7,
+      z: 21.2,
+      duration: 3.6,
+      ease: 'sine.inOut'
+    }, 27.4);
+    tl.to(this.cameraTarget, {
+      x: -11.2,
+      y: -1.5,
+      z: 19.2,
+      duration: 3.6,
+      ease: 'sine.inOut',
+      onUpdate: () => cam.lookAt(this.cameraTarget)
+    }, 27.4);
+
+    // Stage 4: Resurfacing ascent toward water surface (31.0s - 32.6s, 1.6s)
+    tl.to(cam.position, {
+      x: -19.5,
+      y: 1.5,
+      z: 32.5,
+      duration: 1.6,
+      ease: 'power1.in'
+    }, 31.0);
+    tl.to(this.cameraTarget, {
+      x: -17.0,
+      y: 0.0,
+      z: 22.0,
+      duration: 1.6,
+      ease: 'power1.in',
+      onUpdate: () => cam.lookAt(this.cameraTarget)
+    }, 31.0);
+
+    // Surface Piercing Moment on Exit (32.2s): restore fog & ripples
+    tl.call(() => {
+      if (this.pondWater) this.pondWater.setFishRippling(false);
+      if (this.underwaterEffects) this.underwaterEffects.setUnderwaterVisibility(0.0);
+    }, null, 32.2);
+
+    // Stage 5: Rise smoothly into aerial predictive stance before Chapter 4 (32.6s - 34.0s, 1.4s)
+    tl.to(cam.position, {
+      x: -24.0,
+      y: 28.0,
+      z: 44.0,
+      duration: 1.4,
+      ease: 'power2.out'
+    }, 32.6);
+    tl.to(this.cameraTarget, {
+      x: -17.0 - 5.0, // Left offset for phone dock
+      y: 0.0,
+      z: 22.0,
+      duration: 1.4,
+      ease: 'power2.out',
+      onUpdate: () => cam.lookAt(this.cameraTarget)
+    }, 32.6);
 
     // ----------------------------------------------------
     // Chapter 4: PREDICT (34 - 44s)
