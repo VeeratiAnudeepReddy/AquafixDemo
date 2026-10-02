@@ -53,7 +53,7 @@ export class AnimationTimeline {
     const cam = this.camera;
     const cConfig = CONFIG.camera;
 
-    // Helper for smooth camera interpolation with left target framing when phone is docked
+    // Helper for smooth camera interpolation
     const tweenCamera = (cfg, duration, ease = 'power2.inOut', targetOffsetX = 0) => {
       const subTl = gsap.timeline();
       subTl.to(cam.position, {
@@ -76,15 +76,15 @@ export class AnimationTimeline {
       return subTl;
     };
 
-    // ----------------------------------------------------
-    // Chapter 0: INTRO (0 - 6s)
-    // ----------------------------------------------------
+    // ============================================================
+    // INTRO (0-6s) — "The problem": aerial shot of 4 ponds
+    // ============================================================
     tl.addLabel('ch-0', 0);
     tl.call(() => {
       this.currentChapterId = 0;
       this.hudManager.setChapterOverlay(0, this.sensorSim);
       this.farmer.setVisible(false);
-      this.twinHologram.setStreamsActive(true);
+      this.twinHologram.setStreamsActive(false);
       this.twinHologram.setFeedbackOpacity(0);
       this.fishFlocks.setDistress(3, 0);
       this.buoys.setBuoyRisk(3, 'HIGH');
@@ -104,181 +104,169 @@ export class AnimationTimeline {
       ease: 'power2.inOut'
     }, 0);
 
-    // ----------------------------------------------------
-    // Chapter 1: OBSERVE (6 - 14s) - Phone slides in
-    // ----------------------------------------------------
+    // ============================================================
+    // Step 1: MONITOR POND CONDITIONS (6-18s)
+    // Buoys light up, sensor icons, callout labels
+    // ============================================================
     tl.addLabel('ch-1', 6);
     tl.call(() => {
       this.currentChapterId = 1;
       this.hudManager.setChapterOverlay(1, this.sensorSim);
       this.twinHologram.setStreamsActive(true);
       this.infoCards.setVisible(true);
-      if (this.phoneApp) this.phoneApp.showPhone(true);
     }, null, 6);
 
-    // Offset camera target left (-5.0) so phone dock doesn't cover farm focus
-    tl.add(tweenCamera(cConfig.observe, 8, 'power2.inOut', -5.0), 6);
+    tl.add(tweenCamera(cConfig.monitor, 12, 'power2.inOut', 0), 6);
 
-    // ----------------------------------------------------
-    // Chapter 2: DETECT (14 - 24s)
-    // ----------------------------------------------------
-    tl.addLabel('ch-2', 14);
+    // ============================================================
+    // Step 2: ANALYZE WITH AQUAGUARD AI (18-30s)
+    // Data dots from buoys to AI hub
+    // ============================================================
+    tl.addLabel('ch-2', 18);
     tl.call(() => {
       this.currentChapterId = 2;
       this.hudManager.setChapterOverlay(2, this.sensorSim);
-      this.buoys.setBuoyRisk(3, 'WARNING');
-      this.fishFlocks.setDistress(3, 0.75); // Fish rise to surface
-    }, null, 14);
+      this.twinHologram.setStreamsActive(true);
+    }, null, 18);
 
-    tl.add(tweenCamera(cConfig.detect, 10, 'power2.inOut', -4.5), 14);
+    tl.add(tweenCamera(cConfig.analyze, 12, 'power2.inOut', 0), 18);
 
-    // ----------------------------------------------------
-    // Chapter 3: EXPLAIN (24 - 34s) - Underwater Diagnostic Dive
-    // Smooth continuous aerial -> underwater -> aerial flow (3-4s transitions, no cuts)
-    // ----------------------------------------------------
-    tl.addLabel('ch-3', 24);
+    // ============================================================
+    // Step 3: DETECT ISSUE OR RISK (30-42s)
+    // Pond 3 spotlighted, underwater fish gasping, marker red
+    // ============================================================
+    tl.addLabel('ch-3', 30);
     tl.call(() => {
       this.currentChapterId = 3;
       this.hudManager.setChapterOverlay(3, this.sensorSim);
-      this.fishFlocks.setDistress(3, 1.05); // Gasping fish rising near surface
-    }, null, 24);
+      this.buoys.setBuoyRisk(3, 'WARNING');
+      this.fishFlocks.setDistress(3, 0.75);
+    }, null, 30);
 
-    // Stage 1: Aerial descent toward water surface (24.0s - 25.6s, 1.6s)
+    // Aerial approach to Pond 3
+    tl.add(tweenCamera(cConfig.detect, 4, 'power2.inOut', 0), 30);
+
+    // Underwater dive at 34s
     tl.to(cam.position, {
-      x: -21.0,
-      y: 1.8,
-      z: 32.0,
-      duration: 1.6,
-      ease: 'power1.in'
-    }, 24.0);
+      x: -21.0, y: 1.8, z: 32.0,
+      duration: 1.6, ease: 'power1.in'
+    }, 34);
     tl.to(this.cameraTarget, {
-      x: -17.0,
-      y: -0.4,
-      z: 22.0,
-      duration: 1.6,
-      ease: 'power1.in',
+      x: -17.0, y: -0.4, z: 22.0,
+      duration: 1.6, ease: 'power1.in',
       onUpdate: () => cam.lookAt(this.cameraTarget)
-    }, 24.0);
+    }, 34);
 
-    // Surface Piercing Moment: trigger splash ripple and fade fog (25.6s)
+    // Surface piercing
     tl.call(() => {
       if (this.pondWater) this.pondWater.setFishRippling(true);
       if (this.underwaterEffects) this.underwaterEffects.setUnderwaterVisibility(0.85);
-    }, null, 25.6);
+      this.fishFlocks.setDistress(3, 1.05);
+      this.buoys.setBuoyRisk(3, 'CRITICAL');
+    }, null, 35.6);
 
-    // Stage 2: Passing through surface into underwater viewing position (25.6s - 27.4s, 1.8s)
+    // Underwater view
     tl.to(cam.position, {
-      x: -16.5,
-      y: -1.8,
-      z: 23.5,
-      duration: 1.8,
-      ease: 'power2.out'
-    }, 25.6);
+      x: -16.5, y: -1.8, z: 23.5,
+      duration: 1.8, ease: 'power2.out'
+    }, 35.6);
     tl.to(this.cameraTarget, {
-      x: -12.5,
-      y: -1.6,
-      z: 20.5,
-      duration: 1.8,
-      ease: 'power2.out',
+      x: -12.5, y: -1.6, z: 20.5,
+      duration: 1.8, ease: 'power2.out',
       onUpdate: () => cam.lookAt(this.cameraTarget)
-    }, 25.6);
+    }, 35.6);
 
-    // Stage 3: Steady underwater exploration (27.4s - 31.0s, 3.6s)
-    // Clear view of fish schooling, caustics, and illuminated ceiling (clearance > 1.7m above floor)
+    // Steady underwater
     tl.to(cam.position, {
-      x: -14.8,
-      y: -1.7,
-      z: 21.2,
-      duration: 3.6,
-      ease: 'sine.inOut'
-    }, 27.4);
+      x: -14.8, y: -1.7, z: 21.2,
+      duration: 2.0, ease: 'sine.inOut'
+    }, 37.4);
     tl.to(this.cameraTarget, {
-      x: -11.2,
-      y: -1.5,
-      z: 19.2,
-      duration: 3.6,
-      ease: 'sine.inOut',
+      x: -11.2, y: -1.5, z: 19.2,
+      duration: 2.0, ease: 'sine.inOut',
       onUpdate: () => cam.lookAt(this.cameraTarget)
-    }, 27.4);
+    }, 37.4);
 
-    // Stage 4: Resurfacing ascent toward water surface (31.0s - 32.6s, 1.6s)
+    // Resurface
     tl.to(cam.position, {
-      x: -19.5,
-      y: 1.5,
-      z: 32.5,
-      duration: 1.6,
-      ease: 'power1.in'
-    }, 31.0);
+      x: -19.5, y: 1.5, z: 32.5,
+      duration: 1.4, ease: 'power1.in'
+    }, 39.4);
     tl.to(this.cameraTarget, {
-      x: -17.0,
-      y: 0.0,
-      z: 22.0,
-      duration: 1.6,
-      ease: 'power1.in',
+      x: -17.0, y: 0.0, z: 22.0,
+      duration: 1.4, ease: 'power1.in',
       onUpdate: () => cam.lookAt(this.cameraTarget)
-    }, 31.0);
+    }, 39.4);
 
-    // Surface Piercing Moment on Exit (32.2s): restore fog & ripples
     tl.call(() => {
       if (this.pondWater) this.pondWater.setFishRippling(false);
       if (this.underwaterEffects) this.underwaterEffects.setUnderwaterVisibility(0.0);
-    }, null, 32.2);
+    }, null, 40.4);
 
-    // Stage 5: Rise smoothly into aerial predictive stance before Chapter 4 (32.6s - 34.0s, 1.4s)
+    // Rise to aerial
     tl.to(cam.position, {
-      x: -24.0,
-      y: 28.0,
-      z: 44.0,
-      duration: 1.4,
-      ease: 'power2.out'
-    }, 32.6);
+      x: -24.0, y: 28.0, z: 44.0,
+      duration: 1.6, ease: 'power2.out'
+    }, 40.4);
     tl.to(this.cameraTarget, {
-      x: -17.0 - 5.0, // Left offset for phone dock
-      y: 0.0,
-      z: 22.0,
-      duration: 1.4,
-      ease: 'power2.out',
+      x: -17.0, y: 0.0, z: 22.0,
+      duration: 1.6, ease: 'power2.out',
       onUpdate: () => cam.lookAt(this.cameraTarget)
-    }, 32.6);
+    }, 40.4);
 
-    // ----------------------------------------------------
-    // Chapter 4: PREDICT (34 - 44s)
-    // ----------------------------------------------------
-    tl.addLabel('ch-4', 34);
+    // ============================================================
+    // Step 4: ACTION RECOMMENDATION (42-54s)
+    // Checklist card with 4 items
+    // ============================================================
+    tl.addLabel('ch-4', 42);
     tl.call(() => {
       this.currentChapterId = 4;
       this.hudManager.setChapterOverlay(4, this.sensorSim);
       this.buoys.setBuoyRisk(3, 'CRITICAL');
-      this.fishFlocks.setDistress(3, 1.4); // Lethargy
-    }, null, 34);
+      this.fishFlocks.setDistress(3, 1.4);
+    }, null, 42);
 
-    tl.add(tweenCamera(cConfig.predict, 10, 'power2.inOut', -5.0), 34);
+    tl.add(tweenCamera(cConfig.recommend, 12, 'power2.inOut', -5.0), 42);
 
-    // ----------------------------------------------------
-    // Chapter 5: ALERT (44 - 54s) - WhatsApp Chat & Voice Call
-    // ----------------------------------------------------
-    tl.addLabel('ch-5', 44);
+    // ============================================================
+    // Step 5: FARMER-FIRST MOBILE APP (54-66s)
+    // Phone slides in showing 4 panels
+    // ============================================================
+    tl.addLabel('ch-5', 54);
     tl.call(() => {
       this.currentChapterId = 5;
       this.hudManager.setChapterOverlay(5, this.sensorSim);
-      this.buoys.setBuoyRisk(3, 'CRITICAL');
-      this.farmer.setVisible(true);
-      this.farmer.setProgress(0);
-    }, null, 44);
+      if (this.phoneApp) this.phoneApp.showPhone(true);
+    }, null, 54);
 
-    tl.add(tweenCamera(cConfig.alert, 10, 'power2.inOut', -5.5), 44);
+    tl.add(tweenCamera(cConfig.mobileApp, 12, 'power2.inOut', -5.5), 54);
 
-    // ----------------------------------------------------
-    // Chapter 6: SIMULATE & RECOMMEND (54 - 66s)
-    // ----------------------------------------------------
-    tl.addLabel('ch-6', 54);
+    // ============================================================
+    // Step 6: NOTIFY FARMER (66-78s)
+    // 6A: Online (66-72s), 6B: Offline (72-78s)
+    // ============================================================
+    tl.addLabel('ch-6', 66);
     tl.call(() => {
       this.currentChapterId = 6;
       this.hudManager.setChapterOverlay(6, this.sensorSim);
       this.farmer.setVisible(true);
-    }, null, 54);
+      this.farmer.setProgress(0);
+    }, null, 66);
 
-    tl.add(tweenCamera(cConfig.simulate, 12, 'power2.inOut', 0), 54);
+    tl.add(tweenCamera(cConfig.notify, 12, 'power2.inOut', -5.5), 66);
+
+    // ============================================================
+    // Step 7: FARMER TAKES ACTION (78-90s)
+    // Split screen: farmer taps confirm, walks to aerator, switches on
+    // ============================================================
+    tl.addLabel('ch-7', 78);
+    tl.call(() => {
+      this.currentChapterId = 7;
+      this.hudManager.setChapterOverlay(7, this.sensorSim);
+      this.farmer.setVisible(true);
+    }, null, 78);
+
+    tl.add(tweenCamera(cConfig.takeAction, 12, 'power2.inOut', 0), 78);
 
     // Farmer walking along bund to aerator
     const walkProgressObj = { p: 0 };
@@ -289,30 +277,43 @@ export class AnimationTimeline {
       onUpdate: () => {
         this.farmer.setProgress(walkProgressObj.p);
       }
-    }, 55);
+    }, 79);
 
-    // Aerator turns on at 60s
+    // Aerator turns on at 84s
     tl.call(() => {
       this.triggerAeratorActivation();
-    }, null, 60);
+    }, null, 84);
 
-    // ----------------------------------------------------
-    // Chapter 7: LEARN & FEEDBACK LOOP (66 - 75s)
-    // ----------------------------------------------------
-    tl.addLabel('ch-7', 66);
+    // ============================================================
+    // Step 8: TRACK OUTCOME (90-100s)
+    // Pond recovers, oxygen climbs, marker green, feedback loop
+    // ============================================================
+    tl.addLabel('ch-8', 90);
     tl.call(() => {
-      this.currentChapterId = 7;
-      this.hudManager.setChapterOverlay(7, this.sensorSim);
+      this.currentChapterId = 8;
+      this.hudManager.setChapterOverlay(8, this.sensorSim);
       this.buoys.setBuoyRisk(3, 'LOW');
-      this.fishFlocks.setDistress(3, 0); // Calming recovery
+      this.fishFlocks.setDistress(3, 0);
       this.twinHologram.setFeedbackOpacity(1.0);
-      if (this.phoneApp) this.phoneApp.showPhone(false);
-    }, null, 66);
+    }, null, 90);
 
-    tl.add(tweenCamera(cConfig.learn, 9, 'power2.inOut', 0), 66);
+    tl.add(tweenCamera(cConfig.track, 10, 'power2.inOut', 0), 90);
+
+    // ============================================================
+    // OUTRO (100-106s)
+    // 8-step strip, AquaGuard AI, Hawkins Crew, then loop
+    // ============================================================
+    tl.addLabel('ch-9', 100);
+    tl.call(() => {
+      this.currentChapterId = 9;
+      this.hudManager.setChapterOverlay(9, this.sensorSim);
+      if (this.phoneApp) this.phoneApp.showPhone(false);
+    }, null, 100);
+
+    tl.add(tweenCamera(cConfig.outro, 6, 'power2.inOut', 0), 100);
 
     // End loop buffer
-    tl.to({}, { duration: 0.1 }, 75);
+    tl.to({}, { duration: 0.1 }, 106);
   }
 
   triggerAeratorActivation() {

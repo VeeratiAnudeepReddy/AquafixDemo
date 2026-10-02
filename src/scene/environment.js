@@ -57,9 +57,9 @@ export function createEnvironment(scene) {
   const noiseTex = createNoiseTexture();
   const normalTex = createNormalTexture();
 
-  // PBR Standard Materials with procedural roughness and normal grain
+  // PART 1: PBR Materials with new warm earth palette — NO green near ponds
   const landMaterial = new THREE.MeshStandardMaterial({
-    color: CONFIG.palette.landSand,
+    color: CONFIG.palette.landGround,       // #C9B48A warm dry earth
     roughness: 0.88,
     metalness: 0.08,
     roughnessMap: noiseTex,
@@ -67,8 +67,17 @@ export function createEnvironment(scene) {
     normalScale: new THREE.Vector2(0.35, 0.35)
   });
 
-  const bundMaterial = new THREE.MeshStandardMaterial({
-    color: CONFIG.palette.bundSoil,
+  const bundTopMaterial = new THREE.MeshStandardMaterial({
+    color: CONFIG.palette.landBundTop,       // #D8C3A0
+    roughness: 0.85,
+    metalness: 0.05,
+    roughnessMap: noiseTex,
+    normalMap: normalTex,
+    normalScale: new THREE.Vector2(0.5, 0.5)
+  });
+
+  const bundSideMaterial = new THREE.MeshStandardMaterial({
+    color: CONFIG.palette.landBundSide,      // #B89B72
     roughness: 0.92,
     metalness: 0.05,
     roughnessMap: noiseTex,
@@ -76,23 +85,34 @@ export function createEnvironment(scene) {
     normalScale: new THREE.Vector2(0.5, 0.5)
   });
 
+  // Concrete coping around every pond — light grey #E6E6E3
+  const copingMaterial = new THREE.MeshStandardMaterial({
+    color: CONFIG.palette.concreteCoping,    // #E6E6E3
+    roughness: 0.55,
+    metalness: 0.15,
+    normalMap: normalTex,
+    normalScale: new THREE.Vector2(0.3, 0.3)
+  });
+
+  // Dark wet-mud line between concrete and water — #6B5A3F
   const wetMudMaterial = new THREE.MeshStandardMaterial({
-    color: '#362A1F', // Dark saturated moist silt
+    color: CONFIG.palette.wetMudLine,        // #6B5A3F
     roughness: 0.45,
     metalness: 0.2,
     normalMap: normalTex,
     normalScale: new THREE.Vector2(0.6, 0.6)
   });
 
+  // Desaturated olive-yellow grass — sparse, ONLY on outer margins
   const grassMaterial = new THREE.MeshStandardMaterial({
-    color: CONFIG.palette.grass,
+    color: CONFIG.palette.grassOlive,        // #8F9A4F desaturated olive
     roughness: 0.78,
     metalness: 0.05,
     roughnessMap: noiseTex
   });
 
   const concreteMaterial = new THREE.MeshStandardMaterial({
-    color: CONFIG.palette.concrete,
+    color: '#D8D8D5',
     roughness: 0.65,
     metalness: 0.15,
     normalMap: normalTex,
@@ -106,13 +126,14 @@ export function createEnvironment(scene) {
   });
 
   const roofMaterial = new THREE.MeshStandardMaterial({
-    color: '#B87333',
+    color: CONFIG.palette.roofTerracotta,    // #A0522D terracotta
     roughness: 0.92,
     metalness: 0.05,
     normalMap: normalTex
   });
 
-  // 1. Gently Noise-Displaced Outer Terrain
+  // 1. Outer Terrain — warm earth, NOT grass everywhere
+  // Outer area is earth/sand with only small scattered grass patches at margins
   const outerTerrainGeo = new THREE.PlaneGeometry(260, 260, 48, 48);
   outerTerrainGeo.rotateX(-Math.PI / 2);
   
@@ -131,16 +152,34 @@ export function createEnvironment(scene) {
   }
   outerTerrainGeo.computeVertexNormals();
 
-  const outerTerrain = new THREE.Mesh(outerTerrainGeo, grassMaterial);
+  // Outer terrain is now LAND material (warm earth), not grass
+  const outerTerrain = new THREE.Mesh(outerTerrainGeo, landMaterial);
   outerTerrain.position.y = -0.05;
   outerTerrain.receiveShadow = true;
   envGroup.add(outerTerrain);
 
-  // Dirt road entering farm with subtle ruts
+  // Small scattered grass patches ONLY at outer margins (>55m from center)
+  // This keeps grass under 15% of visible ground area
+  const grassPatchPositions = [
+    [-65, -50], [-70, 10], [-58, 45], [62, -48],
+    [68, 15], [55, 50], [-50, -65], [50, -60],
+    [-55, 60], [55, 55]
+  ];
+  grassPatchPositions.forEach(([gx, gz]) => {
+    const size = 6 + Math.random() * 8;
+    const gpGeo = new THREE.CircleGeometry(size, 12);
+    gpGeo.rotateX(-Math.PI / 2);
+    const gp = new THREE.Mesh(gpGeo, grassMaterial);
+    gp.position.set(gx, 0.01, gz);
+    gp.receiveShadow = true;
+    envGroup.add(gp);
+  });
+
+  // Dirt road entering farm
   const roadGeo = new THREE.PlaneGeometry(11, 170, 8, 32);
   roadGeo.rotateX(-Math.PI / 2);
   const roadMat = new THREE.MeshStandardMaterial({
-    color: '#C2AC82',
+    color: CONFIG.palette.landDirtRoad,      // #A98F66
     roughness: 0.95,
     roughnessMap: noiseTex
   });
@@ -149,7 +188,7 @@ export function createEnvironment(scene) {
   road.receiveShadow = true;
   envGroup.add(road);
 
-  // 2. 4 Sunken Pond Basins with Irregular Slopes & Wet-Mud Margins
+  // 2. 4 Sunken Pond Basins with Concrete Coping & Wet-Mud Waterline
   const ponds = CONFIG.farm.ponds;
   const pw = CONFIG.farm.pondWidth;
   const pl = CONFIG.farm.pondLength;
@@ -172,7 +211,7 @@ export function createEnvironment(scene) {
     floor.receiveShadow = true;
     pondGroup.add(floor);
 
-    // Irregular sloped banks with wet mud zone near water line
+    // Sloped banks — using bund side material (warm earth, not green)
     const createBank = (width, length, rotX, rotZ, posX, posY, posZ) => {
       const bankGeo = new THREE.PlaneGeometry(width, length, 12, 6);
       if (rotX) bankGeo.rotateX(rotX);
@@ -185,7 +224,7 @@ export function createEnvironment(scene) {
       }
       bankGeo.computeVertexNormals();
 
-      const bank = new THREE.Mesh(bankGeo, bundMaterial);
+      const bank = new THREE.Mesh(bankGeo, bundSideMaterial);
       bank.position.set(posX, posY, posZ);
       bank.receiveShadow = true;
       return bank;
@@ -200,12 +239,39 @@ export function createEnvironment(scene) {
     // West bank (-X)
     pondGroup.add(createBank(4.8, pl, -Math.PI / 2, -0.75, -pw / 2 + 0.5, -pd / 2, 0));
 
-    // Wet mud shoreline ring right around the water level
-    const mudMarginGeo = new THREE.RingGeometry((pw - 2) / 2, (pw + 1.2) / 2, 32);
+    // CONCRETE COPING — light grey ring around every pond (0.35m wide)
+    const copingW = CONFIG.coping.width;
+    // Top coping (flat on bund top level)
+    // North coping
+    const copingNGeo = new THREE.BoxGeometry(pw + 1, 0.12, copingW);
+    const copingN = new THREE.Mesh(copingNGeo, copingMaterial);
+    copingN.position.set(0, 0.06, pl / 2 + copingW / 2 - 0.1);
+    copingN.receiveShadow = true;
+    pondGroup.add(copingN);
+    // South coping
+    const copingS = new THREE.Mesh(copingNGeo, copingMaterial);
+    copingS.position.set(0, 0.06, -pl / 2 - copingW / 2 + 0.1);
+    copingS.receiveShadow = true;
+    pondGroup.add(copingS);
+    // East coping
+    const copingEGeo = new THREE.BoxGeometry(copingW, 0.12, pl + 1);
+    const copingE = new THREE.Mesh(copingEGeo, copingMaterial);
+    copingE.position.set(pw / 2 + copingW / 2 - 0.1, 0.06, 0);
+    copingE.receiveShadow = true;
+    pondGroup.add(copingE);
+    // West coping
+    const copingWest = new THREE.Mesh(copingEGeo, copingMaterial);
+    copingWest.position.set(-pw / 2 - copingW / 2 + 0.1, 0.06, 0);
+    copingWest.receiveShadow = true;
+    pondGroup.add(copingWest);
+
+    // DARK WET-MUD LINE — thin strip between concrete and water (#6B5A3F, 0.15m)
+    const mudW = CONFIG.coping.mudWidth;
+    const mudMarginGeo = new THREE.RingGeometry((pw - 1.5) / 2, (pw + 0.3) / 2, 32);
     mudMarginGeo.rotateX(-Math.PI / 2);
     mudMarginGeo.scale(1.0, 1.0, pl / pw);
     const mudMargin = new THREE.Mesh(mudMarginGeo, wetMudMaterial);
-    mudMargin.position.y = CONFIG.farm.waterLevelY - 0.08;
+    mudMargin.position.y = CONFIG.farm.waterLevelY - 0.06;
     mudMargin.receiveShadow = true;
     pondGroup.add(mudMargin);
 
@@ -218,7 +284,7 @@ export function createEnvironment(scene) {
       [pw / 2, pl / 2]
     ];
     corners.forEach(([cx, cz]) => {
-      const post = new THREE.Mesh(postGeo, concreteMaterial);
+      const post = new THREE.Mesh(postGeo, copingMaterial);
       post.position.set(cx, 0.6, cz);
       post.castShadow = true;
       post.receiveShadow = true;
@@ -228,15 +294,15 @@ export function createEnvironment(scene) {
     envGroup.add(pondGroup);
   });
 
-  // 3. Central Bund Walkways with Chamfered Edges
+  // 3. Central Bund Walkways — warm earth bund top material
   const hBundGeo = new THREE.BoxGeometry(86, 0.42, CONFIG.farm.bundWidth);
-  const hBund = new THREE.Mesh(hBundGeo, bundMaterial);
+  const hBund = new THREE.Mesh(hBundGeo, bundTopMaterial);
   hBund.position.set(0, 0.12, 0);
   hBund.receiveShadow = true;
   envGroup.add(hBund);
 
   const vBundGeo = new THREE.BoxGeometry(CONFIG.farm.bundWidth, 0.42, 104);
-  const vBund = new THREE.Mesh(vBundGeo, bundMaterial);
+  const vBund = new THREE.Mesh(vBundGeo, bundTopMaterial);
   vBund.position.set(0, 0.12, 0);
   vBund.receiveShadow = true;
   envGroup.add(vBund);
@@ -248,7 +314,7 @@ export function createEnvironment(scene) {
   junction.receiveShadow = true;
   envGroup.add(junction);
 
-  // 4. Farmer's Hut
+  // 4. Farmer's Hut — white/cream walls, terracotta roof
   const hutGroup = new THREE.Group();
   hutGroup.position.set(-37, 0, 0);
 
@@ -260,7 +326,7 @@ export function createEnvironment(scene) {
   const hutWalls = new THREE.Mesh(
     new THREE.BoxGeometry(7.6, 3.2, 5.6),
     new THREE.MeshStandardMaterial({
-      color: '#CCA87B',
+      color: CONFIG.palette.hutWallCream,     // #F5EFE0 cream white
       roughness: 0.9,
       roughnessMap: noiseTex
     })
@@ -301,7 +367,7 @@ export function createEnvironment(scene) {
 
   envGroup.add(hutGroup);
 
-  // 5. Equipment Shed with Solar Array
+  // 5. Equipment Shed — white walls, dark-grey roof
   const shedGroup = new THREE.Group();
   shedGroup.position.set(37, 0, 0);
 
@@ -312,7 +378,7 @@ export function createEnvironment(scene) {
   const shedWall = new THREE.Mesh(
     new THREE.BoxGeometry(7, 2.8, 5),
     new THREE.MeshStandardMaterial({
-      color: '#9E9E9E',
+      color: CONFIG.palette.shedWallWhite,   // #EDEDED white
       roughness: 0.6,
       metalness: 0.2,
       normalMap: normalTex
@@ -329,7 +395,7 @@ export function createEnvironment(scene) {
 
   const solarFrame = new THREE.Mesh(
     new THREE.BoxGeometry(7.4, 0.15, 5.2),
-    new THREE.MeshStandardMaterial({ color: '#1F2937', roughness: 0.5, metalness: 0.7 })
+    new THREE.MeshStandardMaterial({ color: CONFIG.palette.shedRoofDarkGrey, roughness: 0.5, metalness: 0.7 })
   );
   solarPanelGroup.add(solarFrame);
 
@@ -363,12 +429,12 @@ export function createEnvironment(scene) {
 
   envGroup.add(shedGroup);
 
-  // 6. Instanced Palm Trees
+  // 6. Instanced Palm Trees — darker green foliage, positioned at OUTER margins only
   const treePositions = [
-    [-34, -36], [-40, -22], [-42, 24], [-35, 38],
-    [35, -34], [42, -18], [40, 22], [36, 36],
-    [-2, -54], [2, -54], [-2, 54], [2, 54],
-    [-44, 4], [44, -4]
+    [-50, -50], [-55, -22], [-58, 24], [-50, 48],
+    [50, -50], [55, -18], [54, 22], [50, 48],
+    [-2, -60], [2, -60], [-2, 60], [2, 60],
+    [-56, 4], [56, -4]
   ];
 
   const palmGroup = new THREE.Group();
@@ -379,7 +445,8 @@ export function createEnvironment(scene) {
   });
   envGroup.add(palmGroup);
 
-  // 7. Instanced Wind-Swaying Reeds & Grass along Embankments
+  // 7. Wind-Swaying Reeds — placed AWAY from pond edges (on outer margins only)
+  // No reeds around ponds — no green touching water
   const reedsSystem = createWindSwayReeds();
   envGroup.add(reedsSystem.group);
 
@@ -423,8 +490,9 @@ function createPalmTree(seed, noiseTex) {
     curX += curveDir;
   }
 
+  // Palm foliage — darker green #3F6B3A
   const frondMat = new THREE.MeshStandardMaterial({
-    color: '#427038',
+    color: CONFIG.palette.palmFoliage,       // #3F6B3A darker green
     roughness: 0.8,
     side: THREE.DoubleSide
   });
@@ -457,7 +525,8 @@ function createPalmTree(seed, noiseTex) {
   return tree;
 }
 
-// Low-poly instanced reeds with vertex-shader wind sway & color variations
+// Reeds placed ONLY at outer margins, NOT around ponds
+// This ensures no green touches the water
 function createWindSwayReeds() {
   const reedsGroup = new THREE.Group();
 
@@ -495,16 +564,17 @@ function createWindSwayReeds() {
     varying vec2 vUv;
 
     void main() {
-      // Natural vertical gradient from earthy base to sunny green tip
+      // Natural vertical gradient from earthy base to olive tip
       vec3 col = mix(uColorBottom, uColorTop, vUv.y);
       gl_FragColor = vec4(col, 1.0);
     }
   `;
 
+  // Desaturated olive-yellow colours for reeds (not bright green)
   const reedUniforms = {
     uTime: { value: 0 },
-    uColorBottom: { value: new THREE.Color('#4E6A34') },
-    uColorTop: { value: new THREE.Color('#789D4A') }
+    uColorBottom: { value: new THREE.Color('#7A7240') },    // earthy base
+    uColorTop: { value: new THREE.Color('#8F9A4F') }        // olive tip
   };
 
   const reedMat = new THREE.ShaderMaterial({
@@ -514,31 +584,34 @@ function createWindSwayReeds() {
     side: THREE.DoubleSide
   });
 
-  const totalInstances = 4 * 36;
+  // Place reeds only at OUTER margins (far from ponds)
+  const outerReedPositions = [];
+  for (let i = 0; i < 80; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 55 + Math.random() * 30;
+    outerReedPositions.push([
+      Math.cos(angle) * radius,
+      Math.sin(angle) * radius
+    ]);
+  }
+
+  const totalInstances = outerReedPositions.length;
   const instancedReeds = new THREE.InstancedMesh(reedGeo, reedMat, totalInstances);
   instancedReeds.receiveShadow = true;
 
   const dummy = new THREE.Object3D();
-  let idx = 0;
 
-  CONFIG.farm.ponds.forEach((p) => {
-    for (let i = 0; i < 36; i++) {
-      const angle = (i / 36) * Math.PI * 2;
-      const rx = p.x + Math.cos(angle) * (CONFIG.farm.pondWidth / 2 - 0.4) + (Math.random() - 0.5) * 0.4;
-      const rz = p.z + Math.sin(angle) * (CONFIG.farm.pondLength / 2 - 0.4) + (Math.random() - 0.5) * 0.4;
-
-      dummy.position.set(rx, 0.05, rz);
-      dummy.scale.set(
-        0.8 + Math.random() * 0.4,
-        0.75 + Math.random() * 0.5,
-        0.8 + Math.random() * 0.4
-      );
-      dummy.rotation.y = Math.random() * Math.PI * 2;
-      dummy.rotation.z = (Math.random() - 0.5) * 0.15;
-      dummy.updateMatrix();
-
-      instancedReeds.setMatrixAt(idx++, dummy.matrix);
-    }
+  outerReedPositions.forEach(([rx, rz], idx) => {
+    dummy.position.set(rx, 0.05, rz);
+    dummy.scale.set(
+      0.8 + Math.random() * 0.4,
+      0.75 + Math.random() * 0.5,
+      0.8 + Math.random() * 0.4
+    );
+    dummy.rotation.y = Math.random() * Math.PI * 2;
+    dummy.rotation.z = (Math.random() - 0.5) * 0.15;
+    dummy.updateMatrix();
+    instancedReeds.setMatrixAt(idx, dummy.matrix);
   });
 
   instancedReeds.instanceMatrix.needsUpdate = true;

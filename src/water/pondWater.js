@@ -2,14 +2,16 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 
 /**
- * Pond Water Surface Simulation
+ * Pond Water Surface Simulation — PART 1: Clear BLUE water
  * Features:
- * - Shared water color model: shallow #3FB8B0, mid #1F8F9A, deep #0E5A6B
+ * - Blue water: shallow #38B6F0, mid #1E8FD6, deep #0B5FA8
+ * - Strong colour contrast against warm earth land
+ * - Most saturated object in every aerial frame
  * - Depth-based multi-tier color blending
- * - Dual-scale animated micro-normals for wave glitter
- * - Fresnel sky reflection with transparency 0.78 - 0.90 for readable underwater visibility
- * - Subtle pond risk tint shift (max 15% blend towards natural greenish murk)
- * - Aerator radial wave ripples and fish surfacing ripples
+ * - Clear white foam line along concrete edge
+ * - Fresnel sky reflection picking up BLUE, not green
+ * - Pond risk tint: hero pond shifts to duller blue-grey (max 12%)
+ * - Transparency ~0.8 so floor and fish faintly visible from above
  */
 
 export function createPondWater(scene) {
@@ -79,7 +81,7 @@ export function createPondWater(scene) {
     uniform vec3 uColorShallow;
     uniform vec3 uColorMid;
     uniform vec3 uColorDeep;
-    uniform vec3 uColorMurky;
+    uniform vec3 uColorRiskTint;
     uniform float uRiskLevel[4];
     uniform int uPondIndex;
     uniform vec3 uColorFoam;
@@ -89,12 +91,13 @@ export function createPondWater(scene) {
     uniform vec3 uCameraPos;
     uniform vec3 uAeratorPos[4];
     uniform float uAeratorActive[4];
+    uniform float uTransparency;
 
     varying vec2 vUv;
     varying vec3 vWorldPosition;
     varying vec3 vNormal;
 
-    // Dual-scale scrolling procedural normal perturbation
+    // Dual-scale scrolling procedural normal perturbation for glitter
     vec3 getDualNormals(vec2 uv, float time, vec3 baseNormal) {
       vec2 uv1 = uv * 16.0 + vec2(time * 0.05, time * 0.03);
       vec2 uv2 = uv * 36.0 - vec2(time * 0.07, -time * 0.04);
@@ -110,18 +113,18 @@ export function createPondWater(scene) {
       vec3 viewDir = normalize(uCameraPos - vWorldPosition);
       vec3 normal = getDualNormals(vUv, uTime, vNormal);
 
-      // Fresnel reflection factor: stronger at grazing angles, transparent when looking down
+      // Fresnel reflection: stronger at grazing angles, transparent when looking down
       float NdotV = max(dot(normal, viewDir), 0.0);
       float fresnel = pow(1.0 - NdotV, 3.2);
 
-      // Specular Sun Glitter Highlight
+      // Specular Sun Glitter Highlight — soft glitter
       vec3 halfDir = normalize(uSunDirection + viewDir);
       float NdotH = max(dot(normal, halfDir), 0.0);
       float broadSpec = pow(NdotH, 24.0) * 0.55;
       float sharpGlitter = pow(NdotH, 140.0) * 1.35;
       vec3 specular = uSunColor * (broadSpec + sharpGlitter);
 
-      // Depth-based color: shallow edges -> mid teal -> deep center
+      // Depth-based color: shallow blue edges -> mid blue -> deep blue center
       float edgeDistX = min(vUv.x, 1.0 - vUv.x);
       float edgeDistY = min(vUv.y, 1.0 - vUv.y);
       float depthFactor = clamp(min(edgeDistX, edgeDistY) * 3.4, 0.0, 1.0);
@@ -129,18 +132,19 @@ export function createPondWater(scene) {
       vec3 waterBase = mix(uColorShallow, uColorMid, smoothstep(0.0, 0.45, depthFactor));
       waterBase = mix(waterBase, uColorDeep, smoothstep(0.45, 1.0, depthFactor));
 
-      // Subtle pond status color hint: up to 15% blend toward natural greener murky tint
+      // Pond risk tint: shift toward duller blue-grey (max 12%), NEVER green/red
       float risk = uRiskLevel[uPondIndex];
-      waterBase = mix(waterBase, uColorMurky, risk * 0.15);
+      waterBase = mix(waterBase, uColorRiskTint, risk * 0.12);
 
-      // Sky reflection blend via fresnel
-      vec3 waterColor = mix(waterBase, uSkyColor, fresnel * 0.65);
+      // Sky reflection via fresnel — picks up BLUE from sky, not green
+      vec3 skyReflection = mix(uSkyColor, vec3(0.45, 0.72, 0.95), 0.5); // force blue tint in reflection
+      vec3 waterColor = mix(waterBase, skyReflection, fresnel * 0.55);
 
-      // Shoreline soft foam line with animated turbulence
+      // Clear white foam line along concrete edge
       float foamNoise = sin(vUv.x * 65.0 + uTime * 2.2) * 0.007 + cos(vUv.y * 55.0 + uTime * 1.6) * 0.007;
       float edgeFoam = smoothstep(0.035 + foamNoise, 0.005, min(edgeDistX, edgeDistY));
 
-      // Aerator splash foam ring
+      // Aerator splash foam ring — white
       float aeratorFoam = 0.0;
       for (int i = 0; i < 4; i++) {
         if (uAeratorActive[i] > 0.05) {
@@ -152,12 +156,12 @@ export function createPondWater(scene) {
         }
       }
 
-      float totalFoam = clamp(edgeFoam * 0.65 + aeratorFoam, 0.0, 1.0);
+      float totalFoam = clamp(edgeFoam * 0.75 + aeratorFoam, 0.0, 1.0);
       vec3 finalColor = mix(waterColor, uColorFoam, totalFoam);
       finalColor += specular;
 
-      // Transparency: 0.78 from top-down so silt floor and fish are readable, ramping to 0.92 at grazing
-      float alpha = mix(CONFIG.water.transparency, 0.92, fresnel);
+      // Transparency: ~0.80 from top-down so floor and fish faintly visible
+      float alpha = mix(uTransparency, 0.92, fresnel);
       gl_FragColor = vec4(finalColor, alpha);
     }
   `;
@@ -167,21 +171,22 @@ export function createPondWater(scene) {
 
   const waterUniforms = {
     uTime: { value: 0 },
-    uColorShallow: { value: new THREE.Color(CONFIG.water.shallow) }, // #3FB8B0
-    uColorMid: { value: new THREE.Color(CONFIG.water.mid) },         // #1F8F9A
-    uColorDeep: { value: new THREE.Color(CONFIG.water.deep) },       // #0E5A6B
-    uColorMurky: { value: new THREE.Color('#226E64') },              // Natural greenish phytoplankton murk
-    uColorFoam: { value: new THREE.Color('#F0FDFA') },
-    uRiskLevel: { value: [0.0, 0.35, 0.75, 0.0] },                  // P1: Low, P2: Med, P3: High, P4: Low
+    uColorShallow: { value: new THREE.Color(CONFIG.water.shallow) },     // #38B6F0
+    uColorMid: { value: new THREE.Color(CONFIG.water.mid) },             // #1E8FD6
+    uColorDeep: { value: new THREE.Color(CONFIG.water.deep) },           // #0B5FA8
+    uColorRiskTint: { value: new THREE.Color(CONFIG.water.heroRiskTint) }, // #7A9AB8 duller blue-grey
+    uColorFoam: { value: new THREE.Color(CONFIG.water.foamWhite) },      // #F8FDFF white
+    uRiskLevel: { value: [0.0, 0.35, 0.75, 0.0] },                      // P1: Low, P2: Med, P3: High, P4: Low
     uPondIndex: { value: 0 },
     uSunDirection: { value: new THREE.Vector3(45, 55, 35).normalize() },
     uSunColor: { value: new THREE.Color('#FFF5E4') },
-    uSkyColor: { value: new THREE.Color(CONFIG.palette.skyPeach) },
+    uSkyColor: { value: new THREE.Color(CONFIG.palette.skyBlue) },       // Blue sky reflection, not peach
     uCameraPos: { value: new THREE.Vector3() },
     uAeratorPos: { value: aeratorPositions },
     uAeratorActive: { value: [1.0, 1.0, 0.0, 1.0] }, // Pond 3 starts off
     uFishRipplePos: { value: new THREE.Vector3(-17, 0, 22) },
-    uFishRippleActive: { value: 0.0 }
+    uFishRippleActive: { value: 0.0 },
+    uTransparency: { value: CONFIG.water.transparency }
   };
 
   const waterPlanes = [];
@@ -201,10 +206,7 @@ export function createPondWater(scene) {
       fragmentShader: waterFragmentShader,
       uniforms: pondUniforms,
       transparent: true,
-      side: THREE.DoubleSide,
-      defines: {
-        CONFIG_TRANSPARENCY: '0.80'
-      }
+      side: THREE.DoubleSide
     });
 
     const mesh = new THREE.Mesh(geo, mat);

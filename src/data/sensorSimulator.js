@@ -36,69 +36,89 @@ export class SensorSimulator {
     });
   }
 
-  // Update hero scenario based on timeline progress (0 to 75 seconds)
+  // Update hero scenario based on 8-step timeline progress (0 to 106 seconds)
   updateTimelineState(currentTime) {
     const hero = this.pondsData[3];
     if (!hero) return;
 
-    // Time chapters:
-    // 0-14s: Normal/Observe (DO 4.0, Risk MEDIUM/HIGH)
-    // 14-24s: DETECT (DO drops 4.0 -> 3.2, anomaly flag, marker amber)
-    // 24-34s: EXPLAIN (DO drops 3.2 -> 2.6, underwater dive)
-    // 34-44s: PREDICT (DO drops 2.6 -> 2.2, critical threshold crossed, risk red)
-    // 44-54s: ALERT (DO stays critical 2.2, phone rings, banner)
-    // 54-66s: SIMULATE & RECOMMEND (Aerator turns on, DO starts rising 2.2 -> 4.5)
-    // 66-75s: LEARN (DO recovers 4.5 -> 6.5, risk LOW / SAFE, marker green)
+    // 8-STEP TIMELINE MAPPING:
+    // 0-6s:   INTRO (DO 4.0, Risk HIGH)
+    // 6-18s:  MONITOR (DO 4.0, Risk HIGH, sensors active)
+    // 18-30s: ANALYZE (DO drifts 4.0->3.6, anomaly detected)
+    // 30-42s: DETECT (DO drops 3.6->2.6, fish gasping, CRITICAL)
+    // 42-54s: RECOMMEND (DO stays critical 2.4, checklist shown)
+    // 54-66s: MOBILE APP (DO 2.2, phone panels)
+    // 66-78s: NOTIFY (DO critical 2.2, alerts dispatched)
+    // 78-90s: TAKE ACTION (Aerator ON at 84s, DO 2.2->3.8)
+    // 90-100s: TRACK OUTCOME (DO recovers 3.8->6.6)
+    // 100-106s: OUTRO
 
-    if (currentTime < 14) {
+    if (currentTime < 18) {
+      // Intro + Monitor: stable high risk
       hero.do = 4.0;
       hero.ph = 6.7;
       hero.temp = 30.2;
       hero.risk = 'HIGH';
       hero.anomaly = false;
       hero.timeToCritical = 42;
-    } else if (currentTime < 24) {
-      // Detect phase: DO drifts down out of baseline
-      const t = (currentTime - 14) / 10;
-      hero.do = 4.0 - t * 0.8; // 4.0 -> 3.2
-      hero.ph = 6.7 - t * 0.2;
-      hero.temp = 30.2 + t * 0.6;
+    } else if (currentTime < 30) {
+      // Analyze: DO drifts down
+      const t = (currentTime - 18) / 12;
+      hero.do = 4.0 - t * 0.4; // 4.0 -> 3.6
+      hero.ph = 6.7 - t * 0.1;
+      hero.temp = 30.2 + t * 0.3;
       hero.risk = 'WARNING';
       hero.anomaly = true;
-      hero.timeToCritical = Math.round(42 - t * 18);
-    } else if (currentTime < 34) {
-      // Explain phase
-      const t = (currentTime - 24) / 10;
-      hero.do = 3.2 - t * 0.6; // 3.2 -> 2.6
-      hero.ph = 6.5 - t * 0.2;
-      hero.temp = 30.8 + t * 0.5;
-      hero.risk = 'HIGH';
+      hero.timeToCritical = Math.round(42 - t * 14);
+    } else if (currentTime < 42) {
+      // Detect: DO drops fast, fish gasping
+      const t = (currentTime - 30) / 12;
+      hero.do = 3.6 - t * 1.0; // 3.6 -> 2.6
+      hero.ph = 6.6 - t * 0.2;
+      hero.temp = 30.5 + t * 0.8;
+      hero.risk = 'CRITICAL';
       hero.anomaly = true;
-      hero.timeToCritical = Math.round(24 - t * 12);
-    } else if (currentTime < 54) {
-      // Predict & Alert phase: Critical
-      const t = (currentTime - 34) / 20;
+      hero.timeToCritical = Math.round(28 - t * 16);
+    } else if (currentTime < 66) {
+      // Recommend + Mobile App: stays critical
+      const t = (currentTime - 42) / 24;
       hero.do = 2.6 - Math.min(1, t * 1.5) * 0.4; // 2.6 -> 2.2
+      hero.ph = 6.4;
+      hero.temp = 31.3;
+      hero.risk = 'CRITICAL';
+      hero.anomaly = true;
+      hero.timeToCritical = Math.max(2, Math.round(12 - t * 10));
+    } else if (currentTime < 78) {
+      // Notify: still critical, alerts going out
+      hero.do = 2.2;
       hero.ph = 6.3;
       hero.temp = 31.6;
       hero.risk = 'CRITICAL';
       hero.anomaly = true;
-      hero.timeToCritical = Math.max(2, Math.round(12 - t * 10));
-    } else if (currentTime < 66) {
-      // Simulate & Intervene phase: Aerator activates!
-      const t = (currentTime - 54) / 12;
-      hero.do = 2.2 + t * 2.6; // 2.2 -> 4.8
-      hero.ph = 6.3 + t * 0.5;
-      hero.temp = 31.6 - t * 1.8;
-      hero.risk = t > 0.6 ? 'LOW' : 'WARNING';
+      hero.timeToCritical = 2;
+    } else if (currentTime < 90) {
+      // Take Action: Aerator activates, DO starts rising
+      const t = (currentTime - 78) / 12;
+      hero.do = 2.2 + t * 2.0; // 2.2 -> 4.2
+      hero.ph = 6.3 + t * 0.4;
+      hero.temp = 31.6 - t * 1.5;
+      hero.risk = t > 0.5 ? 'WARNING' : 'CRITICAL';
+      hero.anomaly = t < 0.5;
+      hero.timeToCritical = 0;
+    } else if (currentTime < 100) {
+      // Track Outcome: full recovery
+      const t = (currentTime - 90) / 10;
+      hero.do = 4.2 + t * 2.4; // 4.2 -> 6.6
+      hero.ph = 6.7 + t * 0.4;
+      hero.temp = 30.1 - t * 1.6;
+      hero.risk = 'LOW';
       hero.anomaly = false;
       hero.timeToCritical = 0;
     } else {
-      // Learn phase: Full recovery
-      const t = (currentTime - 66) / 9;
-      hero.do = 4.8 + t * 1.8; // 4.8 -> 6.6
-      hero.ph = 6.8 + t * 0.3; // 7.1
-      hero.temp = 29.8 - t * 1.4; // 28.4
+      // Outro: stable safe
+      hero.do = 6.6;
+      hero.ph = 7.1;
+      hero.temp = 28.5;
       hero.risk = 'LOW';
       hero.anomaly = false;
       hero.timeToCritical = 0;

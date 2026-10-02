@@ -1,6 +1,6 @@
 @import './src/phone/phone.css';
 
-/* AquaGuard AI — Enterprise Monitoring System Design System */
+/* AquaGuard AI — Design System with PART 3 Clarity System */
 
 :root {
   /* 8-px Spacing Grid */
@@ -16,10 +16,12 @@
   --text-base: 14px;
   --text-lg: 20px;
   --text-xl: 32px;
+  --text-caption: 20px; /* Minimum 20px for captions at 1080p */
 
   /* Colors (Palette & Enterprise Navy) */
   --bg-navy: rgba(16, 24, 38, 0.92);
   --bg-navy-surface: #172236;
+  --bg-navy-solid: #0D1520;
   --border-hairline: 1px solid #2A3550;
   --border-radius: 6px;
 
@@ -27,6 +29,7 @@
   --color-warning: #FFB020;
   --color-critical: #FF3B30;
   --color-purple: #6B46C1;
+  --color-water-blue: #38B6F0;
 
   --color-text-main: #FFFFFF;
   --color-text-muted: #8E9BAE;
@@ -112,8 +115,220 @@ html, body {
 
 #hud-overlay button,
 #hud-overlay .chapter-tick,
-#hud-overlay #timeline-track-container {
+#hud-overlay #timeline-track-container,
+#hud-overlay .step-pill {
   pointer-events: auto;
+}
+
+/* ============================================================
+   PART 3: STEP TRACKER — persistent top-centred pills
+   ============================================================ */
+#step-tracker-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.step-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-purple);
+  text-transform: uppercase;
+}
+
+#step-tracker {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.step-pill {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(16, 24, 38, 0.8);
+  border: 1px solid #2A3550;
+  cursor: pointer;
+  transition: all 200ms ease;
+  pointer-events: auto;
+}
+
+.step-pill .pill-number {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #1E2D42;
+}
+
+.step-pill .pill-title {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.step-pill.active {
+  background: var(--color-purple);
+  border-color: var(--color-purple);
+}
+
+.step-pill.active .pill-number {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFF;
+}
+
+.step-pill.active .pill-title {
+  color: #FFF;
+}
+
+.step-pill.completed .pill-number {
+  background: var(--color-safe);
+  color: #000;
+}
+
+.step-pill.completed .pill-number::after {
+  content: '✓';
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.step-pill.completed .pill-title {
+  color: var(--color-text-muted);
+}
+
+.step-pill:hover {
+  border-color: var(--color-purple);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   PART 3: CAPTION BAR — bottom-centred, dark navy bg
+   ============================================================ */
+#caption-bar {
+  position: absolute;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-navy-solid);
+  border: 1px solid #2A3550;
+  border-radius: 8px;
+  padding: 10px 24px;
+  max-width: 700px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 35;
+  pointer-events: none;
+}
+
+#caption-bar.visible {
+  opacity: 1;
+}
+
+#caption-text {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: #FFFFFF;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   COLOUR LEGEND (corner, during intro and step 3)
+   ============================================================ */
+#color-legend {
+  position: absolute;
+  bottom: 100px;
+  left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-navy);
+  border: var(--border-hairline);
+  border-radius: var(--border-radius);
+  padding: 8px 12px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 30;
+}
+
+#color-legend.visible {
+  opacity: 1;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ============================================================
+   FALSE-COLOR DEBUG OVERLAY (key C)
+   ============================================================ */
+#false-color-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #FF6B35;
+  border-radius: 8px;
+  padding: 16px 24px;
+  text-align: center;
+  z-index: 100;
+  display: none;
+}
+
+#false-color-overlay.visible {
+  display: block;
+}
+
+.fc-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FF6B35;
+  margin-bottom: 8px;
+}
+
+.fc-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.fc-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #FFF;
+}
+
+.fc-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
 }
 
 /* Top Header */
@@ -232,7 +447,7 @@ html, body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, rgba(31, 167, 168, 0.18) 0deg, transparent 45deg);
+  background: conic-gradient(from 0deg, rgba(56, 182, 240, 0.18) 0deg, transparent 45deg);
   animation: radarSpin 5s linear infinite;
 }
 
@@ -348,7 +563,7 @@ html, body {
   border-radius: 3px;
 }
 
-/* Enterprise Floating CSS2D Pond Card with Collision Handling */
+/* Enterprise Floating CSS2D Pond Card */
 .css2d-pond-card {
   background: var(--bg-navy);
   border: var(--border-hairline);
@@ -393,7 +608,7 @@ html, body {
 .chip-med, .chip-warning { background: rgba(255, 176, 32, 0.15); color: var(--color-warning); }
 .chip-critical { background: rgba(255, 59, 48, 0.2); color: var(--color-critical); }
 
-/* 2x2 Metric Grid with Small-Caps Labels & Tabular Numbers */
+/* 2x2 Metric Grid */
 .css2d-metric-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -487,7 +702,7 @@ html, body {
   transform: translateX(-50%);
 }
 
-/* Underwater Diagnostics Panel (Chapter 3) */
+/* Underwater Diagnostics Panel (Step 3 - Detect) */
 #underwater-explain-panel {
   position: absolute;
   top: 68px;
@@ -518,7 +733,7 @@ html, body {
 .explain-chip {
   font-size: 10px;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-critical);
   text-transform: uppercase;
 }
 
@@ -532,6 +747,17 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.factor-item {
+  padding: 4px 0;
+}
+
+.factor-item.risk-active {
+  background: rgba(255, 59, 48, 0.06);
+  border-left: 2px solid var(--color-critical);
+  padding-left: 8px;
+  border-radius: 2px;
 }
 
 .factor-info {
@@ -552,16 +778,97 @@ html, body {
 .factor-bar-fill { height: 100%; }
 .fill-danger { background: var(--color-critical); }
 .fill-warning { background: var(--color-warning); }
+.fill-safe { background: var(--color-safe); }
 
-.explain-footer {
-  margin-top: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px solid #1E2D42;
-  font-size: var(--text-xs);
-  color: var(--color-warning);
+/* ============================================================
+   RECOMMENDATION PANEL (Step 4)
+   ============================================================ */
+#recommend-panel {
+  position: absolute;
+  top: 68px;
+  right: var(--space-4);
+  width: 300px;
+  background: var(--bg-navy);
+  border: var(--border-hairline);
+  border-radius: var(--border-radius);
+  padding: var(--space-3);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  z-index: 22;
 }
 
-/* Predict Countdown Panel (Chapter 4) */
+#recommend-panel.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.recommend-header {
+  margin-bottom: var(--space-2);
+}
+
+.recommend-chip {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-purple);
+  text-transform: uppercase;
+}
+
+.recommend-header h3 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.recommend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recommend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  background: #090E17;
+  border-radius: 4px;
+  border: 1px solid #1E2D42;
+}
+
+.recommend-item.highlighted {
+  border-color: var(--color-safe);
+  background: rgba(61, 220, 132, 0.06);
+}
+
+.recommend-icon {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.recommend-item.highlighted .recommend-icon {
+  color: var(--color-safe);
+}
+
+.recommend-item strong {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.recommend-reason {
+  display: block;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Predict Countdown Panel */
 #predict-countdown-panel {
   position: absolute;
   top: 68px;
@@ -650,7 +957,7 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Simulation Split Comparison (Chapter 6) */
+/* Simulation Split Comparison (Step 7) */
 #simulation-split-panel {
   position: absolute;
   top: 68px;
@@ -807,25 +1114,22 @@ html, body {
   max-width: 480px;
 }
 
-.intro-stats-row {
+.intro-legend {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: var(--space-4);
-  border-top: 1px solid #1E2D42;
-  padding-top: var(--space-3);
-}
-
-.intro-stat-item strong {
-  display: block;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #FFF;
-}
-
-.intro-stat-item span {
-  font-size: var(--text-xs);
+  gap: 8px;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
+  padding-top: var(--space-3);
+  border-top: 1px solid #1E2D42;
+}
+
+.legend-blue-swatch {
+  width: 20px;
+  height: 12px;
+  background: var(--color-water-blue);
+  border-radius: 2px;
 }
 
 .end-stages-loop {
@@ -834,6 +1138,7 @@ html, body {
   justify-content: center;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .stage-tag {
@@ -843,6 +1148,7 @@ html, body {
 }
 
 .stage-tag.active { color: var(--color-safe); }
+.stage-tag.completed { color: var(--color-text-muted); }
 .stage-sep { color: #334155; }
 .end-team-tag { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-3); }
 
@@ -860,39 +1166,6 @@ html, body {
 }
 
 #btn-replay:hover { background: #23344E; }
-
-/* Restrained Mission Objective Bar (Bottom-Centre) */
-#mission-bar-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: var(--space-1);
-}
-
-.mission-bar {
-  background: var(--bg-navy);
-  border: var(--border-hairline);
-  border-radius: var(--border-radius);
-  padding: 8px var(--space-3);
-  text-align: center;
-  min-width: 440px;
-  max-width: 620px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-}
-
-.mission-step-tag {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 2px;
-}
-
-.mission-subtext {
-  font-size: var(--text-xs);
-  color: #E2E8F0;
-  line-height: 1.3;
-}
 
 /* Bottom Controls & Timeline Bar */
 #hud-footer {

@@ -365,45 +365,51 @@ export class PhoneApp {
     if (p2) this.p2Do.textContent = `${p2.currentDisplayDo || p2.do.toFixed(1)} mg/L`;
     if (p4) this.p4Do.textContent = `${p4.currentDisplayDo || p4.do.toFixed(1)} mg/L`;
 
-    // Timeline-driven Scene Progression:
-    // Ch 1-4 (6s to 44s): Scene 1 (AquaGuard App)
-    // Ch 5 (44s to 49s): Scene 2 (WhatsApp Chat)
-    // Ch 5 (49s to 54s): Scene 3 (Voice Call)
-    // Ch 6-7 (54s to 75s): App shows recovery
+    // 8-STEP Timeline-driven Scene Progression:
+    // Step 5 (54-66s): Scene 1 (AquaGuard Mobile App with 4 panels)
+    // Step 6A (66-72s): Scene 2 (WhatsApp-style Online alerts)
+    // Step 6B (72-78s): Scene 3 (Voice Call + Offline sync)
+    // Step 7 (78-90s): Scene 1 showing farmer action / recovery
+    // Step 8-Outro (90+): Hide phone
 
-    if (currentTime >= 6 && currentTime < 44) {
+    if (currentTime >= 54 && currentTime < 66) {
+      // Step 5: Farmer-First Mobile App
       if (!this.isVisible) this.showPhone(true);
       if (this.currentScene !== 1) this.switchScene(1);
 
-      // Demonstrate regional language toggle once at 20s
-      if (currentTime >= 20 && currentTime < 26 && this.currentLang === 'EN') {
+      // Demonstrate regional language toggle once at 58s
+      if (currentTime >= 58 && currentTime < 62 && this.currentLang === 'EN') {
         this.currentLang = 'తెలుగు';
         this.langLabel.textContent = this.currentLang;
         this.updateLanguageLabels();
-      } else if (currentTime >= 26 && this.currentLang === 'తెలుగు') {
+      } else if (currentTime >= 62 && this.currentLang === 'తెలుగు') {
         this.currentLang = 'EN';
         this.langLabel.textContent = this.currentLang;
         this.updateLanguageLabels();
       }
-    } else if (currentTime >= 44 && currentTime < 49) {
+    } else if (currentTime >= 66 && currentTime < 72) {
+      // Step 6A: Online — WhatsApp + App alerts
       if (!this.isVisible) this.showPhone(true);
       if (this.currentScene !== 2) {
         this.switchScene(2);
         this.populateChatSequence();
       }
-    } else if (currentTime >= 49 && currentTime < 54) {
+    } else if (currentTime >= 72 && currentTime < 78) {
+      // Step 6B: Voice Call / Offline sync
       if (!this.isVisible) this.showPhone(true);
       if (this.currentScene !== 3) {
         this.switchScene(3);
         this.startVoiceCallSequence();
       }
-    } else if (currentTime >= 54 && currentTime < 65) {
-      // Scene 1 during simulate showing recovery
+    } else if (currentTime >= 78 && currentTime < 90) {
+      // Step 7-8: Farmer action & tracking — show app with recovery
+      if (!this.isVisible) this.showPhone(true);
       if (this.currentScene !== 1) this.switchScene(1);
-    } else if (currentTime >= 65) {
-      // Hide phone for end card
+    } else if (currentTime >= 90) {
+      // Outro: hide phone
       if (this.isVisible) this.showPhone(false);
     } else {
+      // Before Step 5: phone hidden
       if (this.isVisible) this.showPhone(false);
     }
   }

@@ -3,11 +3,12 @@ import { CONFIG } from '../config.js';
 
 /**
  * Underwater Atmosphere & Optical Effects for Hero Pond 3
+ * PART 1: Blue underwater fog (#1479B8), blue caustics, blue god rays
  * Features:
- * - Bright, readable, crystal-clear light fog (#1B7F8C, visibility ~15m)
- * - Earthy silt floor (#7A6A4F) with animated multi-octave caustics
- * - Luminous water surface ceiling seen from below with rippling waves and meniscus surface line
- * - Soft volumetric sun shafts (god rays)
+ * - Blue underwater fog (#1479B8, visibility ~15m)
+ * - Earthy silt floor (#8A7B5E) with animated blue-tinted caustics
+ * - Luminous water surface ceiling with blue rippling
+ * - Soft blue volumetric sun shafts
  * - Suspended drifting plankton / micro-bubbles
  */
 
@@ -20,19 +21,19 @@ export function createUnderwaterEffects(scene) {
   const pl = CONFIG.farm.pondLength - 0.8;
 
   // ----------------------------------------------------
-  // 1. Earthy Silt Floor (#7A6A4F) with Animated Caustics
+  // 1. Earthy Silt Floor (#8A7B5E) with Blue-Tinted Caustics
   // ----------------------------------------------------
   const siltCanvas = document.createElement('canvas');
   siltCanvas.width = 128;
   siltCanvas.height = 128;
   const sCtx = siltCanvas.getContext('2d');
-  // Procedural silt texture matching #7A6A4F
+  // Procedural silt texture matching #8A7B5E
   for (let x = 0; x < 128; x++) {
     for (let y = 0; y < 128; y++) {
       const n = (Math.random() - 0.5) * 18;
-      const r = Math.floor(122 + n);
-      const g = Math.floor(106 + n * 0.9);
-      const b = Math.floor(79 + n * 0.8);
+      const r = Math.floor(138 + n);
+      const g = Math.floor(123 + n * 0.9);
+      const b = Math.floor(94 + n * 0.8);
       sCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       sCtx.fillRect(x, y, 1, 1);
     }
@@ -79,7 +80,8 @@ export function createUnderwaterEffects(scene) {
       float c2 = causticWave(vUv, 0.85, 22.0);
       float totalCaustic = (c1 * 0.65 + c2 * 0.35);
 
-      vec3 causticLight = vec3(0.35, 0.95, 0.90) * totalCaustic * 1.9;
+      // Blue-tinted caustic light (not teal/green)
+      vec3 causticLight = vec3(0.25, 0.65, 0.95) * totalCaustic * 1.9;
       
       // Falloff near edge of pond floor basin
       float edgeX = smoothstep(0.0, 0.06, vUv.x) * smoothstep(1.0, 0.94, vUv.x);
@@ -97,7 +99,7 @@ export function createUnderwaterEffects(scene) {
     uniforms: {
       uTime: { value: 0 },
       uSiltMap: { value: siltTexture },
-      uSiltBaseColor: { value: new THREE.Color(CONFIG.water.silt) } // #7A6A4F
+      uSiltBaseColor: { value: new THREE.Color(CONFIG.water.silt) } // #8A7B5E
     }
   });
 
@@ -108,7 +110,7 @@ export function createUnderwaterEffects(scene) {
 
   // ----------------------------------------------------
   // 2. Visible Water Surface Ceiling (Seen from Below)
-  // Bright ceiling with ripples and distinct surface horizon meniscus
+  // Blue-tinted ceiling with ripples
   // ----------------------------------------------------
   const ceilingGeo = new THREE.PlaneGeometry(pw, pl, 40, 48);
   ceilingGeo.rotateX(Math.PI / 2); // Facing down toward the underwater camera
@@ -135,14 +137,14 @@ export function createUnderwaterEffects(scene) {
       vec2 uv2 = vUv * 34.0 - vec2(uTime * 0.10, -uTime * 0.07);
       float ripple = sin(uv1.x + sin(uv1.y)) * 0.5 + cos(uv2.x + cos(uv2.y)) * 0.5;
 
-      // Bright translucent ceiling with light cyan glow
-      vec3 ceilingColor = mix(vec3(0.35, 0.88, 0.85), vec3(0.85, 0.98, 0.95), ripple * 0.35 + 0.45);
+      // Blue-tinted translucent ceiling (clear blue water)
+      vec3 ceilingColor = mix(vec3(0.22, 0.62, 0.92), vec3(0.55, 0.82, 0.98), ripple * 0.35 + 0.45);
 
       // Edge perimeter surface line tint (air-water boundary ring)
       float edgeX = min(vUv.x, 1.0 - vUv.x);
       float edgeY = min(vUv.y, 1.0 - vUv.y);
       float border = smoothstep(0.04, 0.005, min(edgeX, edgeY));
-      vec3 finalCeiling = mix(ceilingColor, vec3(0.95, 0.85, 0.70), border * 0.65);
+      vec3 finalCeiling = mix(ceilingColor, vec3(0.85, 0.80, 0.65), border * 0.5);
 
       gl_FragColor = vec4(finalCeiling, 0.75);
     }
@@ -162,7 +164,7 @@ export function createUnderwaterEffects(scene) {
   underwaterGroup.add(ceilingMesh);
 
   // ----------------------------------------------------
-  // 3. Volumetric Light Shafts (God Rays from Sun)
+  // 3. Volumetric Light Shafts (Blue God Rays)
   // ----------------------------------------------------
   const shaftGroup = new THREE.Group();
   shaftGroup.position.set(heroPond.x, -1.8, heroPond.z);
@@ -186,7 +188,8 @@ export function createUnderwaterEffects(scene) {
       // Soft vertical taper from surface downwards
       float verticalFade = (1.0 - vUv.y) * smoothstep(0.0, 0.25, vUv.y);
       float shimmer = 0.88 + sin(uTime * 2.2 + vUv.x * 10.0) * 0.12;
-      vec3 rayColor = vec3(0.35, 0.95, 0.92) * shimmer;
+      // Blue god rays (not teal)
+      vec3 rayColor = vec3(0.22, 0.65, 0.95) * shimmer;
       float alpha = verticalFade * 0.18;
 
       gl_FragColor = vec4(rayColor, alpha);
@@ -242,8 +245,8 @@ export function createUnderwaterEffects(scene) {
   const pCtx = pCanvas.getContext('2d');
   const g = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
   g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-  g.addColorStop(0.4, 'rgba(78, 222, 215, 0.65)');
-  g.addColorStop(1, 'rgba(78, 222, 215, 0)');
+  g.addColorStop(0.4, 'rgba(56, 182, 240, 0.65)');  // Blue particles, not teal
+  g.addColorStop(1, 'rgba(56, 182, 240, 0)');
   pCtx.fillStyle = g;
   pCtx.fillRect(0, 0, 32, 32);
 
@@ -265,7 +268,7 @@ export function createUnderwaterEffects(scene) {
 
   let isUnderwaterMode = false;
   const surfaceFogColor = new THREE.Color(CONFIG.palette.skyPeach);
-  const underwaterFogColor = new THREE.Color(CONFIG.water.underwaterFog); // #1B7F8C (Light, bright, clear)
+  const underwaterFogColor = new THREE.Color(CONFIG.water.underwaterFog); // #1479B8 (Blue, clear)
 
   return {
     group: underwaterGroup,

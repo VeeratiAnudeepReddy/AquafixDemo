@@ -4,14 +4,29 @@
  */
 
 export const CONFIG = {
-  // Visual Palette (strictly adhering to design guidelines)
+  // Visual Palette — PART 1: strong water/land hue separation
   palette: {
-    waterTeal: '#1FA7A8',
-    waterDeep: '#0B4F5C',
-    landSand: '#D9C7A0',
-    grass: '#6FA35B',
-    concrete: '#CFCFCF',
-    bundSoil: '#C4B188',
+    // Water is the ONLY blue in the scene
+    waterShallow: '#38B6F0',
+    waterMid: '#1E8FD6',
+    waterDeep: '#0B5FA8',
+    // Land: warm dry earth, sand, no green near ponds
+    landBundTop: '#D8C3A0',
+    landBundSide: '#B89B72',
+    landGround: '#C9B48A',
+    landDirtRoad: '#A98F66',
+    // Concrete pond coping
+    concreteCoping: '#E6E6E3',
+    wetMudLine: '#6B5A3F',
+    // Grass & trees — desaturated, sparse
+    grassOlive: '#8F9A4F',
+    palmFoliage: '#3F6B3A',
+    // Buildings
+    hutWallCream: '#F5EFE0',
+    roofTerracotta: '#A0522D',
+    shedWallWhite: '#EDEDED',
+    shedRoofDarkGrey: '#4A4A4A',
+    // Sky & UI
     skyPeach: '#F6C98B',
     skyBlue: '#7FB7E5',
     uiDarkNavy: '#101826',
@@ -23,14 +38,22 @@ export const CONFIG = {
     textMuted: '#94A3B8'
   },
 
-  // Shared Water Colour Model (consistent across aerial & underwater)
+  // Shared Water Colour Model — clear BLUE, never green
   water: {
-    shallow: '#3FB8B0',       // Clear vibrant teal in shallows
-    mid: '#1F8F9A',           // Balanced teal-green
-    deep: '#0E5A6B',          // Clear deep teal-green (never murky brown/black)
-    silt: '#7A6A4F',          // Warm earthy pond silt floor
-    underwaterFog: '#1B7F8C', // Light, bright underwater fog
-    transparency: 0.80        // 0.75 - 0.85 transparency
+    shallow: '#38B6F0',       // Clear blue in shallows
+    mid: '#1E8FD6',           // Rich blue mid-depth
+    deep: '#0B5FA8',          // Deep saturated blue
+    silt: '#8A7B5E',          // Warm earthy pond silt floor
+    underwaterFog: '#1479B8', // Clear blue underwater fog
+    transparency: 0.80,       // 0.75 - 0.85 transparency
+    heroRiskTint: '#7A9AB8',  // Duller blue-grey for hero pond risk (max 12%)
+    foamWhite: '#F8FDFF'      // White foam
+  },
+
+  // Concrete coping dimensions
+  coping: {
+    width: 0.35,              // 0.35m wide concrete edge
+    mudWidth: 0.15            // 0.15m dark wet-mud line
   },
 
   // Dimensions & Farm Layout
@@ -78,7 +101,7 @@ export const CONFIG = {
         id: 3,
         name: 'POND 3',
         species: 'Tilapia (Nile)',
-        color: '#1FA7A8',
+        color: '#1E8FD6',
         x: -17,
         z: 22,
         hero: true,
@@ -130,32 +153,52 @@ export const CONFIG = {
     shrimp: { optimal: 5.0, warning: 3.8, critical: 2.9 }
   },
 
-  // Timeline Chapter Timing (Total ~75 seconds)
+  // 8-STEP WORKFLOW TIMELINE (Total ~106 seconds)
+  // Matches AquaGuard AI Pond Management Workflow image exactly
   timeline: {
-    totalDuration: 75,
+    totalDuration: 106,
     chapters: [
-      { id: 0, title: 'INTRO', start: 0, end: 6, label: '01 • Overview' },
-      { id: 1, title: 'OBSERVE', start: 6, end: 14, label: '02 • Observe' },
-      { id: 2, title: 'DETECT', start: 14, end: 24, label: '03 • Detect' },
-      { id: 3, title: 'EXPLAIN', start: 24, end: 34, label: '04 • Explain' },
-      { id: 4, title: 'PREDICT', start: 34, end: 44, label: '05 • Predict' },
-      { id: 5, title: 'ALERT', start: 44, end: 54, label: '06 • Alert' },
-      { id: 6, title: 'SIMULATE & RECOMMEND', start: 54, end: 66, label: '07 • Simulate' },
-      { id: 7, title: 'LEARN', start: 66, end: 75, label: '08 • Learn' }
+      { id: 0, title: 'INTRO', start: 0, end: 6, label: 'Intro',
+        caption: 'Fish farmers lose fish when pond water quality changes suddenly. AquaGuard AI watches the water and warns the farmer early.' },
+      { id: 1, title: 'MONITOR POND CONDITIONS', start: 6, end: 18, label: 'Monitor',
+        caption: 'Sensors continuously measure oxygen, temperature and pH in every pond.' },
+      { id: 2, title: 'ANALYZE WITH AQUAGUARD AI', start: 18, end: 30, label: 'Analyze',
+        caption: 'AquaGuard AI studies the data to spot patterns, predict risks and find anything unusual.' },
+      { id: 3, title: 'DETECT ISSUE OR RISK', start: 30, end: 42, label: 'Detect',
+        caption: 'Problem found in Pond 3: oxygen is dropping fast and the fish are stressed.' },
+      { id: 4, title: 'ACTION RECOMMENDATION', start: 42, end: 54, label: 'Recommend',
+        caption: 'The AI tells the farmer exactly what to do.' },
+      { id: 5, title: 'FARMER-FIRST MOBILE APP', start: 54, end: 66, label: 'Mobile App',
+        caption: 'Everything is in one simple app, made for farmers.' },
+      { id: 6, title: 'NOTIFY FARMER', start: 66, end: 78, label: 'Notify',
+        caption6A: 'If internet is available, the farmer gets WhatsApp, app and voice call alerts.',
+        caption6B: 'Even without internet, the app shows saved alerts and syncs later.',
+        caption: 'The farmer is notified through multiple channels, online and offline.' },
+      { id: 7, title: 'FARMER TAKES ACTION', start: 78, end: 90, label: 'Take Action',
+        caption: 'The farmer follows the steps and confirms the action.' },
+      { id: 8, title: 'TRACK OUTCOME', start: 90, end: 100, label: 'Track',
+        caption: 'The pond recovers, and every result makes the system smarter.' },
+      { id: 9, title: 'OUTRO', start: 100, end: 106, label: 'Outro',
+        caption: 'AquaGuard AI — Hawkins Crew' }
     ]
   },
 
-  // Camera Waypoints for GSAP Transitions
+  // Camera Waypoints for GSAP Transitions (new 8-step layout)
   camera: {
     intro: {
       position: { x: 0, y: 85, z: 95 },
       target: { x: 0, y: 0, z: 0 },
       fov: 42
     },
-    observe: {
+    monitor: {
       position: { x: 0, y: 52, z: 62 },
       target: { x: 0, y: 0, z: 0 },
       fov: 45
+    },
+    analyze: {
+      position: { x: 0, y: 42, z: 55 },
+      target: { x: 0, y: 8, z: 0 },
+      fov: 44
     },
     detect: {
       position: { x: -28, y: 32, z: 46 },
@@ -167,22 +210,32 @@ export const CONFIG = {
       target: { x: -13, y: -1.4, z: 20 },
       fov: 55
     },
-    predict: {
+    recommend: {
       position: { x: -26, y: 38, z: 52 },
       target: { x: -17, y: 0, z: 22 },
       fov: 42
     },
-    alert: {
+    mobileApp: {
       position: { x: -22, y: 26, z: 42 },
       target: { x: -17, y: 0, z: 22 },
       fov: 38
     },
-    simulate: {
+    notify: {
+      position: { x: -22, y: 26, z: 42 },
+      target: { x: -17, y: 0, z: 22 },
+      fov: 38
+    },
+    takeAction: {
       position: { x: 0, y: 46, z: 56 },
       target: { x: -17, y: 0, z: 22 },
       fov: 42
     },
-    learn: {
+    track: {
+      position: { x: 0, y: 55, z: 65 },
+      target: { x: -17, y: 0, z: 22 },
+      fov: 44
+    },
+    outro: {
       position: { x: 0, y: 65, z: 75 },
       target: { x: 0, y: 4, z: 0 },
       fov: 44

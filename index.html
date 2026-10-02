@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AquaGuard AI — Adaptive Digital Twin for Aquaculture</title>
+    <title>AquaGuard AI — Smart Pond Management for Fish Farmers</title>
+    <meta name="description" content="AquaGuard AI monitors fish ponds, detects water quality issues, and alerts farmers through WhatsApp, app and voice calls — even offline." />
     <!-- Google Fonts: Rajdhani for HUD headings & Inter for telemetry -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,12 +25,20 @@
 
       <!-- HUD Overlay -->
       <div id="hud-overlay">
+        <!-- PART 3: Persistent Step Tracker (top, centred) — 8 numbered pills -->
+        <div id="step-tracker-bar">
+          <span class="step-label" id="step-label">INTRODUCTION</span>
+          <div id="step-tracker">
+            <!-- Dynamically populated 8 step pills -->
+          </div>
+        </div>
+
         <!-- Top Header: Brand & Status -->
         <header id="hud-header">
           <div class="brand-badge">
             <span class="brand-pulse"></span>
             <span class="brand-title">AQUAGUARD AI</span>
-            <span class="brand-sub">DIGITAL TWIN v2.4</span>
+            <span class="brand-sub">POND MANAGEMENT</span>
           </div>
 
           <!-- Risk Stars (1 to 5 stars) -->
@@ -44,6 +53,15 @@
             </div>
           </div>
         </header>
+
+        <!-- Colour Legend (visible during intro and Step 3) -->
+        <div id="color-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background:#38B6F0"></span>Pond Water</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#3DDC84"></span>Safe</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#FFB020"></span>Warning</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#FF3B30"></span>Critical</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#6B46C1"></span>AquaGuard AI</div>
+        </div>
 
         <!-- Minimap (Top-Left) -->
         <div id="minimap-panel">
@@ -77,12 +95,12 @@
         <div id="critical-alert-banner">
           <div class="banner-compact">
             <span class="banner-pond-tag">POND 3 ALERT</span>
-            <span class="banner-cause" id="banner-cause-text">Dissolved oxygen depleted below safe threshold (4.0 mg/L)</span>
+            <span class="banner-cause" id="banner-cause-text">Oxygen in water is dangerously low</span>
             <span class="banner-countdown" id="banner-countdown-text">Est. 42m to critical</span>
           </div>
         </div>
 
-        <!-- Countdown Ring Panel (Chapter 4 - Predict) -->
+        <!-- Countdown Ring Panel (Step 3 - Detect) -->
         <div id="predict-countdown-panel">
           <div class="countdown-widget">
             <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
@@ -97,31 +115,27 @@
           </div>
           <div class="predict-forecast-card">
             <div class="forecast-row">
-              <span>Current DO:</span>
+              <span>Current Oxygen:</span>
               <strong id="predict-cur-do">2.6 mg/L</strong>
             </div>
             <div class="forecast-row">
-              <span>Depletion Rate:</span>
+              <span>Drop Rate:</span>
               <strong class="text-danger">-0.42 mg/L/hr</strong>
-            </div>
-            <div class="forecast-row">
-              <span>Confidence:</span>
-              <strong class="text-purple">98.4% (Neural Twin)</strong>
             </div>
           </div>
         </div>
 
-        <!-- Underwater Explain Panel (Chapter 3 - Explain) -->
+        <!-- Underwater Diagnostics Panel (Step 3 - Detect) -->
         <div id="underwater-explain-panel">
           <div class="explain-header">
-            <span class="explain-chip">ROOT CAUSE ANALYSIS</span>
-            <h3>POND 3 HYPOXIA DIAGNOSTICS</h3>
+            <span class="explain-chip">RISK DETECTED</span>
+            <h3>POND 3 — LOW OXYGEN</h3>
           </div>
           <div class="factors-list">
-            <div class="factor-item">
+            <div class="factor-item risk-active">
               <div class="factor-info">
-                <span>Dissolved Oxygen Trajectory</span>
-                <span class="factor-val text-danger">Falling -0.4 mg/L/hr</span>
+                <span>⚠ Low Oxygen Level</span>
+                <span class="factor-val text-danger">Falling fast</span>
               </div>
               <div class="factor-bar-bg">
                 <div class="factor-bar-fill fill-danger" style="width: 88%"></div>
@@ -129,8 +143,8 @@
             </div>
             <div class="factor-item">
               <div class="factor-info">
-                <span>Water Temperature Spike</span>
-                <span class="factor-val text-warning">+1.8 °C above baseline</span>
+                <span>Unusual Fish Behaviour</span>
+                <span class="factor-val text-warning">Gasping near surface</span>
               </div>
               <div class="factor-bar-bg">
                 <div class="factor-bar-fill fill-warning" style="width: 72%"></div>
@@ -138,143 +152,186 @@
             </div>
             <div class="factor-item">
               <div class="factor-info">
-                <span>Low pH Acid Drift</span>
-                <span class="factor-val text-warning">6.5 pH (Alkalinity drop)</span>
+                <span>High Temperature</span>
+                <span class="factor-val text-warning">+1.8 °C above normal</span>
               </div>
               <div class="factor-bar-bg">
                 <div class="factor-bar-fill fill-warning" style="width: 60%"></div>
               </div>
             </div>
-          </div>
-          <div class="explain-footer">
-            <span class="fish-behavior-pill">OBSERVED BEHAVIOR: SURFACE CLUSTERING & GASPING</span>
+            <div class="factor-item">
+              <div class="factor-info">
+                <span>Other abnormalities</span>
+                <span class="factor-val">pH drift</span>
+              </div>
+              <div class="factor-bar-bg">
+                <div class="factor-bar-fill fill-warning" style="width: 35%"></div>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- Action Recommendation Panel (Step 4) -->
+        <div id="recommend-panel">
+          <div class="recommend-header">
+            <span class="recommend-chip">AI RECOMMENDATION</span>
+            <h3>WHAT TO DO NOW</h3>
+          </div>
+          <div class="recommend-list">
+            <div class="recommend-item highlighted">
+              <span class="recommend-icon">✓</span>
+              <div>
+                <strong>Adjust aeration</strong>
+                <span class="recommend-reason">Turn on aerator to increase oxygen quickly</span>
+              </div>
+            </div>
+            <div class="recommend-item">
+              <span class="recommend-icon">○</span>
+              <div>
+                <strong>Optimize feeding</strong>
+                <span class="recommend-reason">Reduce feed to lower oxygen demand</span>
+              </div>
+            </div>
+            <div class="recommend-item">
+              <span class="recommend-icon">○</span>
+              <div>
+                <strong>Partial water change</strong>
+                <span class="recommend-reason">Add fresh water to dilute toxins</span>
+              </div>
+            </div>
+            <div class="recommend-item">
+              <span class="recommend-icon">○</span>
+              <div>
+                <strong>Other steps</strong>
+                <span class="recommend-reason">Check for dead fish, inspect inlet</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <!-- Simulation Split Comparison (Chapter 6 - Simulate & Recommend) -->
+        <!-- Simulation Split Comparison (Step 7 - Farmer Takes Action) -->
         <div id="simulation-split-panel">
           <div class="sim-header">
-            <h3>TWIN DIGITAL TWIN PROJECTIONS</h3>
-            <span class="sim-badge">BAYESIAN COUNTERFACTUAL ENGINE</span>
+            <h3>FARMER ACTION</h3>
+            <span class="sim-badge">AERATOR ACTIVATION</span>
           </div>
           <div class="sim-cards-row">
             <!-- Scenario A: Do Nothing -->
             <div class="sim-card card-negative">
-              <div class="sim-card-tag">BRANCH A: DO NOTHING</div>
+              <div class="sim-card-tag">DO NOTHING</div>
               <div class="sim-stat">
                 <span class="sim-val text-danger">1.1 mg/L</span>
-                <span class="sim-desc">Projected DO at +60m</span>
+                <span class="sim-desc">Oxygen after 1 hour</span>
               </div>
               <div class="sim-result text-danger">
-                ⚠ 85% CATASTROPHIC FISH MORTALITY
+                ⚠ 85% FISH LOSS
               </div>
             </div>
-            <!-- Scenario B: Twin Protocol -->
+            <!-- Scenario B: Turn on Aerator -->
             <div class="sim-card card-positive">
-              <div class="sim-card-tag text-safe">BRANCH B: TWIN PROTOCOL</div>
+              <div class="sim-card-tag text-safe">TURN ON AERATOR</div>
               <div class="sim-stat">
                 <span class="sim-val text-safe">5.8 mg/L</span>
-                <span class="sim-desc">Projected DO at +60m</span>
+                <span class="sim-desc">Oxygen after 1 hour</span>
               </div>
               <div class="sim-result text-safe">
-                ✓ FULL RECOVERY (0% LOSS)
+                ✓ FULL RECOVERY
               </div>
             </div>
           </div>
           <!-- Recommended Actions Checklist -->
           <div class="action-checklist">
-            <span class="checklist-title">RECOMMENDED ACTIONS & AUTONOMOUS DISPATCH:</span>
+            <span class="checklist-title">ACTION LOG:</span>
             <div class="check-item checked" id="check-1">
               <span class="check-box">✔</span>
-              <span>1. Activate Paddle-Wheel Aerator Unit A-03</span>
+              <span>1. Farmer confirmed action on phone</span>
             </div>
             <div class="check-item checked" id="check-2">
               <span class="check-box">✔</span>
-              <span>2. Initiate 15% Fresh Water Inflow</span>
+              <span>2. Walking to aerator switch</span>
             </div>
             <div class="check-item" id="check-3">
               <span class="check-box" id="check-box-3">○</span>
-              <span>3. Telemetry Feedback Verification at +15m</span>
+              <span>3. Aerator switched on</span>
             </div>
           </div>
         </div>
 
-        <!-- End Card (Chapter 7 - Learn) -->
+        <!-- End Card (Outro) -->
         <div id="end-card-panel">
           <div class="end-card-box">
-            <div class="end-badge">AQUAGUARD AI PLATFORM</div>
-            <h2>Adaptive Digital Twin for Aquaculture</h2>
+            <div class="end-badge">AQUAGUARD AI</div>
+            <h2>Smart Pond Management for Fish Farmers</h2>
             <p class="end-subtitle">
-              Closing the loop between telemetry sensors, edge inference, and farmer livelihood.
+              Monitor • Analyze • Detect • Recommend • Alert • Act • Track
             </p>
             <div class="end-stages-loop">
-              <span class="stage-tag">Observe</span>
-              <span class="stage-sep">•</span>
-              <span class="stage-tag">Detect</span>
-              <span class="stage-sep">•</span>
-              <span class="stage-tag">Explain</span>
-              <span class="stage-sep">•</span>
-              <span class="stage-tag">Predict</span>
-              <span class="stage-sep">•</span>
-              <span class="stage-tag">Simulate</span>
-              <span class="stage-sep">•</span>
-              <span class="stage-tag">Recommend</span>
-              <span class="stage-sep">•</span>
-              <span class="stage-tag active">Learn</span>
+              <span class="stage-tag completed">Monitor</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag completed">Analyze</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag completed">Detect</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag completed">Recommend</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag completed">App</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag completed">Notify</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag completed">Act</span>
+              <span class="stage-sep">→</span>
+              <span class="stage-tag active">Track</span>
             </div>
             <div class="end-team-tag">
-              Developed for Hackathon by <strong>Hawkins Crew</strong>
+              Developed by <strong>Hawkins Crew</strong>
             </div>
             <button id="btn-replay">↻ REPLAY DEMO</button>
           </div>
         </div>
 
-        <!-- Intro Title Card (Chapter 0) -->
+        <!-- Intro Title Card (Step 0) -->
         <div id="intro-card-panel">
           <div class="intro-box">
-            <span class="intro-chip">NEXT-GEN AQUACULTURE INTELLIGENCE</span>
+            <span class="intro-chip">THE PROBLEM</span>
             <h1>AquaGuard AI</h1>
             <p class="intro-tagline">
-              Adaptive Digital Twin for Aquaculture Farms
+              Fish farmers lose fish when pond water quality changes suddenly.<br>
+              AquaGuard AI watches the water and warns the farmer early.
             </p>
-            <div class="intro-stats-row">
-              <div class="intro-stat-item">
-                <strong>17</strong>
-                <span>Ponds Monitored</span>
-              </div>
-              <div class="intro-stat-item">
-                <strong>73,000+</strong>
-                <span>Continuous Observations</span>
-              </div>
-              <div class="intro-stat-item">
-                <strong>42 min</strong>
-                <span>Early Warning Horizon</span>
-              </div>
+            <div class="intro-legend">
+              <span class="legend-blue-swatch"></span>
+              <span>Blue = Pond Water</span>
             </div>
           </div>
         </div>
 
-        <!-- Mission Objective Bar (Bottom-Centre) -->
-        <div id="mission-bar-container">
-          <div class="mission-bar">
-            <div class="mission-step-tag" id="mission-step-tag">STEP 1 OF 7: OVERVIEW</div>
-            <div class="mission-subtext" id="mission-narrative">AquaGuard AI Digital Twin: establishing real-time telemetry link across 4 monitored pond ecosystems.</div>
+        <!-- False-Color Debug Overlay (key C) -->
+        <div id="false-color-overlay">
+          <div class="fc-label">FALSE-COLOR DEBUG</div>
+          <div class="fc-legend">
+            <span class="fc-item"><span class="fc-swatch" style="background:#38B6F0"></span>Water</span>
+            <span class="fc-item"><span class="fc-swatch" style="background:#D8C3A0"></span>Land</span>
+            <span class="fc-item"><span class="fc-swatch" style="background:#8F9A4F"></span>Vegetation</span>
           </div>
+        </div>
+
+        <!-- PART 3: Caption Bar (bottom, centred) -->
+        <div id="caption-bar" class="visible">
+          <span id="caption-text">Fish farmers lose fish when pond water quality changes suddenly. AquaGuard AI watches the water and warns the farmer early.</span>
         </div>
 
         <!-- Bottom Controls & Timeline Bar -->
         <footer id="hud-footer">
           <div class="controls-left">
             <button id="btn-play-pause" title="Play / Pause (Space)">❚❚</button>
-            <span id="time-display">00:00 / 01:15</span>
+            <span id="time-display">00:00 / 01:46</span>
           </div>
 
           <!-- Timeline Chapter Track -->
           <div id="timeline-track-container">
             <div id="timeline-progress-bar"></div>
             <div class="chapter-ticks" id="chapter-ticks-row">
-              <!-- Dynamically populated 8 chapter ticks -->
+              <!-- Dynamically populated chapter ticks -->
             </div>
           </div>
 

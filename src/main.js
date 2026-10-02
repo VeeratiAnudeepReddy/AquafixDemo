@@ -26,6 +26,7 @@ class AquaGuardApp {
     this.css2dContainer = document.getElementById('css2d-container');
 
     this.clock = new THREE.Clock();
+    this.falseColorMode = false;
     this.initScene();
     this.initRenderers();
     this.initComponents();
@@ -112,7 +113,7 @@ class AquaGuardApp {
     this.infoCards = createPondInfoCards(this.scene, this.buoys.buoys, (pondId) => {
       // Focus on selected pond
       if (pondId === 3) {
-        this.timeline.jumpToChapter(2); // Jump to detect phase
+        this.timeline.jumpToChapter(3); // Jump to detect phase
       }
     });
 
@@ -148,7 +149,7 @@ class AquaGuardApp {
       farmer: this.farmer,
       sensorSim: this.sensorSim,
       underwaterEffects: this.underwater,
-      pondWater: this.pondWater,
+      pondWater: this.water,
       phoneApp: this.phoneApp
     });
 
@@ -156,7 +157,7 @@ class AquaGuardApp {
     this.fpsCount = 0;
     this.lastFpsCheck = performance.now();
 
-    // Check URL query parameters (e.g. ?ch=5&scene=2 or ?t=50)
+    // Check URL query parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('t')) {
       const seekTime = parseFloat(urlParams.get('t'));
@@ -221,16 +222,40 @@ class AquaGuardApp {
   }
 
   initInteractions() {
-    // Keyboard Shortcuts: Space (Play/Pause), 1-7 (Chapters), H (Toggle HUD), F (Fullscreen), M (Audio Toggle)
+    // PART 3 Keyboard Shortcuts:
+    // Space: Play/Pause
+    // Left/Right arrows: Previous/Next step
+    // 1-8: Jump to step
+    // 0: Jump to intro
+    // R: Restart
+    // H: Toggle HUD
+    // F: Fullscreen
+    // M: Audio Toggle
+    // D: Debug wireframes
+    // C: False-color debug view
+    // P: Presenter mode
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
         this.timeline.togglePlayPause();
-      } else if (e.key >= '1' && e.key <= '7') {
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const nextId = Math.min(9, this.timeline.currentChapterId + 1);
+        this.timeline.jumpToChapter(nextId);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prevId = Math.max(0, this.timeline.currentChapterId - 1);
+        this.timeline.jumpToChapter(prevId);
+      } else if (e.key >= '1' && e.key <= '8') {
         const chapterId = parseInt(e.key, 10);
         this.timeline.jumpToChapter(chapterId);
       } else if (e.key === '0') {
         this.timeline.jumpToChapter(0);
+      } else if (e.key === 'r' || e.key === 'R') {
+        this.timeline.jumpToChapter(0);
+        if (!this.timeline.isPlaying) {
+          this.timeline.togglePlayPause();
+        }
       } else if (e.key === 'h' || e.key === 'H') {
         this.hudManager.toggleHud();
       } else if (e.key === 'm' || e.key === 'M') {
@@ -240,6 +265,12 @@ class AquaGuardApp {
         if (this.fishFlocks && this.fishFlocks.toggleDebugWireframes) {
           this.fishFlocks.toggleDebugWireframes();
         }
+      } else if (e.key === 'c' || e.key === 'C') {
+        // Toggle false-color debug view
+        this.toggleFalseColor();
+      } else if (e.key === 'p' || e.key === 'P') {
+        // Toggle presenter mode
+        this.hudManager.togglePresenter();
       } else if (e.key === 'f' || e.key === 'F') {
         if (!document.fullscreenElement) {
           if (this.container.requestFullscreen) this.container.requestFullscreen();
@@ -248,6 +279,15 @@ class AquaGuardApp {
         }
       }
     });
+  }
+
+  toggleFalseColor() {
+    this.falseColorMode = !this.falseColorMode;
+    const fcOverlay = document.getElementById('false-color-overlay');
+    if (fcOverlay) {
+      fcOverlay.classList.toggle('visible', this.falseColorMode);
+    }
+    console.log(`[AquaGuard] False-color debug view: ${this.falseColorMode ? 'ON' : 'OFF'}`);
   }
 
   onWindowResize() {
